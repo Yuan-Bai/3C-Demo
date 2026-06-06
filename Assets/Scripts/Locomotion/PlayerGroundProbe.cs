@@ -18,7 +18,14 @@ public sealed class PlayerGroundProbe : MonoBehaviour
     public Vector3 GroundPoint { get; private set; }
     public Vector3 GroundNormal { get; private set; } = Vector3.up;
     public float GroundDistance { get; private set; }
-    [field: SerializeField]public float SlopeAngle { get; private set; }
+    [field: SerializeField] public float SlopeAngle { get; private set; }
+    public PlayerGroundHit CurrentHit { get; private set; }
+
+    public LayerMask GroundLayers => _groundLayers;
+    public float SphereRadius => _sphereRadius;
+    public float ProbeStartHeight => _probeStartHeight;
+    public float ProbeDistance => _probeDistance;
+    public float MaxWalkableSlope => _maxWalkableSlope;
 
     private Vector3 ProbeOrigin => transform.position + Vector3.up * _probeStartHeight;
 
@@ -29,31 +36,79 @@ public sealed class PlayerGroundProbe : MonoBehaviour
 
     public void ProbeGround()
     {
-        Vector3 origin = ProbeOrigin;
-        // 进行球形探测，防止漏判
-        bool hasHit = Physics.SphereCast(
-            origin, 
-            _sphereRadius, 
-            Vector3.down, 
-            out RaycastHit hit, 
-            _probeDistance, 
-            _groundLayers, 
-            QueryTriggerInteraction.Ignore);
-        if (hasHit)
+        if (!TryProbeGround(out PlayerGroundHit hit))
         {
             ClearGround();
             return;
         }
 
         IsGrounded = true;
-        GroundPoint = hit.point;
-        GroundNormal = hit.normal;
-        GroundDistance = hit.distance;
+        CurrentHit = hit;
+        GroundPoint = hit.Point;
+        GroundNormal = hit.Normal;
+        GroundDistance = hit.Distance;
 
-        // 坡度角，相对于世界xz平面的夹角
-        SlopeAngle = Vector3.Angle(GroundNormal, Vector3.up);
+        SlopeAngle = hit.SlopeAngle;
 
-        IsWalkable = SlopeAngle <= _maxWalkableSlope;
+        IsWalkable = hit.IsWalkable;
+    }
+
+    public bool TryProbeGround(out PlayerGroundHit hit)
+    {
+        return TryProbeGround(ProbeOrigin, _sphereRadius, _probeDistance, out hit);
+    }
+
+    public bool TryProbeGround(Vector3 origin, float distance, out PlayerGroundHit hit)
+    {
+        return TryProbeGround(origin, _sphereRadius, distance, out hit);
+    }
+
+    public bool TryProbeGround(Vector3 origin, float radius, float distance, out PlayerGroundHit hit)
+    {
+        bool hasHit = Physics.SphereCast(
+            origin,
+            radius,
+            Vector3.down,
+            out RaycastHit raycastHit,
+            distance,
+            _groundLayers,
+            QueryTriggerInteraction.Ignore);
+
+        hit = hasHit ? PlayerGroundHit.FromRaycast(raycastHit, _maxWalkableSlope) : PlayerGroundHit.None;
+        return hasHit;
+    }
+
+    public bool TryProbeGroundAt(Vector3 worldPosition, float startHeight, float distance, out PlayerGroundHit hit)
+    {
+        Vector3 origin = worldPosition + Vector3.up * Mathf.Max(0.0f, startHeight);
+        return TryProbeGround(origin, _sphereRadius, distance, out hit);
+    }
+
+    public bool TryProbeGroundAt(Vector3 worldPosition, out PlayerGroundHit hit)
+    {
+        return TryProbeGroundAt(worldPosition, _probeStartHeight, _probeDistance, out hit);
+    }
+
+    public bool TryGetGroundPose(
+        Vector3 worldPosition,
+        Vector3 forwardHint,
+        float startHeight,
+        float distance,
+        out Pose pose)
+    {
+        if (TryProbeGroundAt(worldPosition, startHeight, distance, out PlayerGroundHit hit))
+        {
+            pose = hit.GetSurfacePose(forwardHint);
+            return true;
+        }
+
+        pose = PlayerGroundHit.CreateFallbackPose(worldPosition, forwardHint);
+        return false;
+    }
+
+    public bool TryGetGroundPose(Vector3 worldPosition, Vector3 forwardHint, out Pose pose)
+    {
+        return TryGetGroundPose(worldPosition, forwardHint, _probeStartHeight, _probeDistance, out pose);
     }
 
     private void ClearGround()
@@ -64,6 +119,7 @@ public sealed class PlayerGroundProbe : MonoBehaviour
         GroundNormal = Vector3.up;
         GroundDistance = 0.0f;
         SlopeAngle = 0.0f;
+        CurrentHit = PlayerGroundHit.None;
     }
 
     private void OnDrawGizmosSelected()
