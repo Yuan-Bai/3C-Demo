@@ -8,6 +8,7 @@ public sealed class PlayerCameraRelativeMover : MonoBehaviour
     [Header("References")]
     [SerializeField] private PlayerInputReader _input;
     [SerializeField] private PlayerKinematicMotor _motor;
+    [SerializeField] private PlayerGroundProbe _groundProbe;
     [SerializeField] private Transform _cameraTransform;
     [SerializeField] private Transform _rotationRoot;
 
@@ -19,39 +20,13 @@ public sealed class PlayerCameraRelativeMover : MonoBehaviour
     public bool HasMoveInput { get; private set; }
     public Vector3 MoveDirection { get; private set; }
 
-    private void Reset()
-    {
-        _input = GetComponent<PlayerInputReader>();
-        _motor = GetComponent<PlayerKinematicMotor>();
-        _rotationRoot = transform;
-
-        if (Camera.main != null)
-        {
-            _cameraTransform = Camera.main.transform;
-        }
-    }
-
     private void Awake()
     {
-        if (_input == null)
-        {
-            _input = GetComponent<PlayerInputReader>();
-        }
-
-        if (_motor == null)
-        {
-            _motor = GetComponent<PlayerKinematicMotor>();
-        }
-
-        if (_rotationRoot == null)
-        {
-            _rotationRoot = transform;
-        }
-
-        if (_cameraTransform == null && Camera.main != null)
-        {
-            _cameraTransform = Camera.main.transform;
-        }
+        _input ??= GetComponent<PlayerInputReader>();
+        _motor ??= GetComponent<PlayerKinematicMotor>();
+        _groundProbe ??= GetComponent<PlayerGroundProbe>();
+        _rotationRoot ??= transform;
+        _cameraTransform ??= Camera.main.transform;
     }
 
     private void Update()
@@ -62,6 +37,11 @@ public sealed class PlayerCameraRelativeMover : MonoBehaviour
             MoveDirection = Vector3.zero;
             return;
         }
+
+        // 进行一次地面检测，不交给GroundProbe.update每帧执行，方便固定顺序
+        _groundProbe.ProbeGround();
+
+        // _motor.SnapToGround();
 
         // 斜向同时按下 W+D 时，输入长度会超过 1；限制长度可以避免斜向移动比正向更快。
         Vector2 moveAxis = Vector2.ClampMagnitude(_input.MoveAxis, 1.0f);
@@ -76,15 +56,9 @@ public sealed class PlayerCameraRelativeMover : MonoBehaviour
         MoveDirection = GetCameraRelativeDirection(moveAxis);
         Vector3 displacement = MoveDirection * (_moveSpeed * Time.deltaTime);
 
-        if (_motor != null)
-        {
-            _motor.Move(displacement);
-        }
-        else
-        {
-            transform.position += displacement;
-        }
-
+        // 进行位移
+        _motor.Move(displacement);
+        // 进行转向
         RotateToward(MoveDirection);
     }
 

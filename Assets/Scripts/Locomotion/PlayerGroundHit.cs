@@ -47,7 +47,7 @@ public readonly struct PlayerGroundHit
 
         return new PlayerGroundHit(
             true,
-            slopeAngle <= maxWalkableSlope,
+            CalculateIsWalkable(slopeAngle, maxWalkableSlope),
             hit.point,
             normal,
             hit.distance,
@@ -58,11 +58,34 @@ public readonly struct PlayerGroundHit
             hit);
     }
 
+    /// <summary>
+    /// 计算是否可走，使用函数方便以后添加规则
+    /// </summary>
+    /// <param name="slopeAngle"></param>
+    /// <param name="maxWalkableSlope"></param>
+    /// <returns></returns>
+    public static bool CalculateIsWalkable(float slopeAngle, float maxWalkableSlope)
+    {
+        return slopeAngle <= maxWalkableSlope;
+    }
+
+    /// <summary>
+    /// 无法获取问题所处平面法线时，默认放在水平地面上
+    /// </summary>
+    /// <param name="position"></param>
+    /// <param name="forwardHint"></param>
+    /// <returns>返回Pose(pos, quaternion)</returns>
     public static Pose CreateFallbackPose(Vector3 position, Vector3 forwardHint)
     {
         return new Pose(position, CreateSurfaceRotation(Vector3.up, forwardHint));
     }
 
+    /// <summary>
+    /// 将物体的forward和投影到平面的forward尽可能一致，物体的up和平面的normal尽可能一致
+    /// </summary>
+    /// <param name="normal"></param>
+    /// <param name="forwardHint"></param>
+    /// <returns></returns>
     public static Quaternion CreateSurfaceRotation(Vector3 normal, Vector3 forwardHint)
     {
         normal = normal.sqrMagnitude > 0.0001f ? normal.normalized : Vector3.up;
@@ -81,11 +104,21 @@ public readonly struct PlayerGroundHit
         return Quaternion.LookRotation(forward.normalized, normal);
     }
 
+    /// <summary>
+    /// 获取hitpoint这一点，forward投影在hitnormal对应平面的位置和四元数
+    /// </summary>
+    /// <param name="forwardHint"></param>
+    /// <returns></returns>
     public Pose GetSurfacePose(Vector3 forwardHint)
     {
         return new Pose(Point, GetSurfaceRotation(forwardHint));
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="forwardHint"></param>
+    /// <returns></returns>
     public Quaternion GetSurfaceRotation(Vector3 forwardHint)
     {
         Vector3 normal = HasHit && Normal.sqrMagnitude > 0.0001f ? Normal.normalized : Vector3.up;

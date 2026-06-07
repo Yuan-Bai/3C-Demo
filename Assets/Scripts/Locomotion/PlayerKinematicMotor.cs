@@ -1,9 +1,16 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 [DisallowMultipleComponent]
 public sealed class PlayerKinematicMotor : MonoBehaviour
 {
     private const float MinMoveSqrMagnitude = 0.000001f;
+    private const int MaxOverlapResults = 16;
+    private const int MaxDepenetrationIterations = 4;
+    private const float DepenetrationPadding = 0.001f;
+
+    private readonly Collider[] _overlapResults = new Collider[MaxOverlapResults];
+    private CapsuleCollider _depenetrationCapsule;
 
     [Header("References")]
     [SerializeField] private PlayerGroundProbe _groundProbe;
@@ -67,6 +74,26 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
         if (_groundProbe == null)
         {
             _groundProbe = GetComponent<PlayerGroundProbe>();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_depenetrationCapsule == null)
+        {
+            return;
+        }
+
+        GameObject helper = _depenetrationCapsule.gameObject;
+        _depenetrationCapsule = null;
+
+        if (Application.isPlaying)
+        {
+            Destroy(helper);
+        }
+        else
+        {
+            DestroyImmediate(helper);
         }
     }
 
@@ -144,6 +171,7 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
             return displacement;
         }
 
+        // 去除包含跳跃、重力、下落等 y 分量
         Vector3 horizontal = Vector3.ProjectOnPlane(displacement, Vector3.up);
         if (horizontal.sqrMagnitude <= MinMoveSqrMagnitude)
         {
@@ -160,8 +188,11 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
         return slopeDirection.normalized * horizontal.magnitude + vertical;
     }
 
+    private Vector3 hitPoint1 = Vector3.zero;
     private void MoveWithCollision(Vector3 displacement)
     {
+        ResolveBodyOverlaps();
+
         Vector3 remaining = displacement;
 
         for (int i = 0; i < _maxSlideIterations; i++)
@@ -175,16 +206,21 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
             float distance = remaining.magnitude;
 
             bool hasHit = CastBody(direction, distance + _skinWidth, out RaycastHit hit);
-
             if (!hasHit)
             {
                 ApplyPositionDelta(remaining);
+                ResolveBodyOverlaps();
                 break;
             }
 
+            hitPoint1 = hit.point;
+
+            // 如果打中地面，通过判断可以向前移动，但是最后skinwidth不为0，以避免一直打中地面导致穿墙
             if (IsWalkableSurface(hit.normal))
             {
+                Debug.Log(hit.collider.gameObject.name);
                 ApplyPositionDelta(remaining);
+                ResolveBodyOverlaps();
                 break;
             }
 
@@ -195,14 +231,15 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
             float safeDistance = Mathf.Max(0.0f, hit.distance - _skinWidth);
             Vector3 safeMove = direction * safeDistance;
             ApplyPositionDelta(safeMove);
+            ResolveBodyOverlaps();
 
             Vector3 leftover = direction * Mathf.Max(0.0f, distance - safeDistance);
 
-            if (TryStepUp(leftover, out Vector3 stepDelta))
-            {
-                ApplyPositionDelta(stepDelta);
-                break;
-            }
+            // if (TryStepUp(leftover, out Vector3 stepDelta))
+            // {
+            //     ApplyPositionDelta(stepDelta);
+            //     break;
+            // }
 
             remaining = Vector3.ProjectOnPlane(leftover, hit.normal);
             if (hit.normal.y > 0.0f && remaining.y > 0.0f)
@@ -229,6 +266,150 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
             distance,
             _collisionLayers,
             QueryTriggerInteraction.Ignore);
+    }
+
+    private bool ResolveBodyOverlaps()
+    {
+        bool moved = false;
+
+        for (int i = 0; i < MaxDepenetrationIterations; i++)
+        {
+            if (!TryResolveSingleBodyOverlap())
+            {
+                break;
+            }
+
+            moved = true;
+        }
+
+        return moved;
+    }
+
+    private bool TryResolveSingleBodyOverlap()
+    {
+        GetCapsulePoints(out Vector3 bottom, out Vector3 top);
+        int count = Physics.OverlapCapsuleNonAlloc(
+            bottom,
+            top,
+            _capsuleRadius,
+            _overlapResults,
+            _collisionLayers,
+            QueryTriggerInteraction.Ignore);
+
+        if (count <= 0)
+        {
+            return false;
+        }
+
+        CapsuleCollider bodyCollider = GetDepenetrationCapsule();
+        ConfigureDepenetrationCapsule(bodyCollider, transform.position);
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider other = _overlapResults[i];
+            _overlapResults[i] = null;
+
+            if (ShouldIgnoreOverlapCollider(other))
+            {
+                continue;
+            }
+
+            bodyCollider.enabled = true;
+            bool hasPenetration = Physics.ComputePenetration(
+                bodyCollider,
+                transform.position,
+                Quaternion.identity,
+                other,
+                other.transform.position,
+                other.transform.rotation,
+                out Vector3 direction,
+                out float distance);
+            bodyCollider.enabled = false;
+
+            if (!hasPenetration || distance <= 0.0f)
+            {
+                continue;
+            }
+
+            Vector3 correction = direction.normalized * (distance + DepenetrationPadding);
+            correction = ConstrainDepenetrationCorrection(other, correction);
+            if (correction.sqrMagnitude <= MinMoveSqrMagnitude)
+            {
+                continue;
+            }
+
+            ApplyPositionDelta(correction);
+            return true;
+        }
+
+        bodyCollider.enabled = false;
+        return false;
+    }
+
+    private CapsuleCollider GetDepenetrationCapsule()
+    {
+        if (_depenetrationCapsule != null)
+        {
+            return _depenetrationCapsule;
+        }
+
+        GameObject helper = new GameObject("PlayerKinematicMotor Depenetration Capsule")
+        {
+            hideFlags = HideFlags.HideAndDontSave
+        };
+
+        _depenetrationCapsule = helper.AddComponent<CapsuleCollider>();
+        _depenetrationCapsule.direction = 1;
+        _depenetrationCapsule.enabled = false;
+        return _depenetrationCapsule;
+    }
+
+    private void ConfigureDepenetrationCapsule(CapsuleCollider capsule, Vector3 position)
+    {
+        float radius = Mathf.Max(0.01f, _capsuleRadius);
+        float height = Mathf.Max(_capsuleHeight, radius * 2.0f);
+
+        capsule.radius = radius;
+        capsule.height = height;
+        capsule.center = Vector3.up * (height * 0.5f);
+        capsule.transform.SetPositionAndRotation(position, Quaternion.identity);
+    }
+
+    private bool ShouldIgnoreOverlapCollider(Collider other)
+    {
+        if (other == null || other == _depenetrationCapsule)
+        {
+            return true;
+        }
+
+        Transform otherTransform = other.transform;
+        return otherTransform == transform || otherTransform.IsChildOf(transform);
+    }
+
+    private Vector3 ConstrainDepenetrationCorrection(Collider other, Vector3 correction)
+    {
+        if (correction.y <= _skinWidth)
+        {
+            return correction;
+        }
+
+        float footY = transform.position.y;
+        if (other.bounds.max.y <= footY + _skinWidth * 2.0f)
+        {
+            return correction;
+        }
+
+        Vector3 horizontal = Vector3.ProjectOnPlane(correction, Vector3.up);
+        if (horizontal.sqrMagnitude > MinMoveSqrMagnitude)
+        {
+            return horizontal;
+        }
+
+        Vector3 away = transform.position - other.bounds.center;
+        away.y = 0.0f;
+        return away.sqrMagnitude > MinMoveSqrMagnitude
+            ? away.normalized * correction.magnitude
+            : Vector3.zero;
     }
 
     private bool TryStepUp(Vector3 movement, out Vector3 stepDelta)
@@ -301,18 +482,29 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
             QueryTriggerInteraction.Ignore);
     }
 
-    private bool SnapToGround()
+    public bool SnapToGround()
     {
         float distance = Mathf.Max(GetProbeDistance(), GetProbeStartHeight() + _groundSnapDistance + _skinWidth);
 
-        if (!ProbeGroundAt(transform.position, GetProbeStartHeight(), distance, out PlayerGroundHit hit)
+        if (!_groundProbe.TryProbeGround(transform.position+ Vector3.up * _groundProbe.ProbeStartHeight, distance, out PlayerGroundHit hit)
             || !hit.IsWalkable)
         {
             GroundHit = hit;
             return false;
         }
 
-        float verticalDelta = hit.Point.y - transform.position.y;
+        float verticalDelta = CalculateGroundHeightAtPosition(hit.Point, hit.Normal, transform.position) - transform.position.y;
+        if (verticalDelta >= _skinWidth)
+        {
+            Debug.Log("angle: "+_groundProbe.SlopeAngle);
+            Debug.LogWarning("不应该向上吸附过大距离");
+            return false;
+            // Debug.Log("hit.Point          : " + hit.Point);
+            // Debug.Log("verticalDelta      : " + verticalDelta);
+            // Debug.Log("transform.position : " + transform.position);
+            // Debug.Log("Angle              : " + Vector3.Angle(hit.Normal, Vector3.up));
+        }
+        // float verticalDelta = hit.Point.y - transform.position.y;
         if (verticalDelta > _maxStepHeight + _skinWidth || verticalDelta < -_groundSnapDistance - _skinWidth)
         {
             GroundHit = hit;
@@ -327,6 +519,17 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
 
         GroundHit = hit;
         return true;
+    }
+
+    private float CalculateGroundHeightAtPosition(Vector3 pointOnGround, Vector3 groundNormal, Vector3 position)
+    {
+        if (Mathf.Abs(groundNormal.y) <= 0.0001f)
+        {
+            return pointOnGround.y;
+        }
+        float xOffset = position.x - pointOnGround.x;
+        float zOffset = position.z - pointOnGround.z;
+        return pointOnGround.y - (groundNormal.x * xOffset + groundNormal.z * zOffset)/groundNormal.y;
     }
 
     private void RefreshGround()
@@ -397,6 +600,11 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
 
     private void ApplyPositionDelta(Vector3 delta)
     {
+        if (delta.y>0.01f)
+        {
+            Debug.Log("deltaY: "+delta.y);
+            Debug.Log("angle: "+_groundProbe.SlopeAngle);
+        }
         transform.position += delta;
         LastAppliedDisplacement += delta;
     }
@@ -430,5 +638,7 @@ public sealed class PlayerKinematicMotor : MonoBehaviour
         Gizmos.DrawLine(bottom - Vector3.forward * _capsuleRadius, top - Vector3.forward * _capsuleRadius);
         Gizmos.DrawLine(bottom + Vector3.right * _capsuleRadius, top + Vector3.right * _capsuleRadius);
         Gizmos.DrawLine(bottom - Vector3.right * _capsuleRadius, top - Vector3.right * _capsuleRadius);
+
+        Gizmos.DrawWireSphere(hitPoint1, 0.05f);
     }
 }
