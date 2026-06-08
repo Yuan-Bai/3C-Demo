@@ -6099,7 +6099,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: d2cfbe837267f2d48978d8adf6c75a18,
         type: 3}
       propertyPath: m_Name
-      value: QianXiao7
+      value: QianXiao
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: d2cfbe837267f2d48978d8adf6c75a18,
         type: 3}
@@ -7017,9 +7017,10 @@ GameObject:
   m_Component:
   - component: {fileID: 693288947}
   - component: {fileID: 693288948}
-  - component: {fileID: 693288949}
-  - component: {fileID: 693288950}
+  - component: {fileID: 693288952}
   - component: {fileID: 693288951}
+  - component: {fileID: 693288950}
+  - component: {fileID: 693288949}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -7059,6 +7060,7 @@ MonoBehaviour:
   _moveAxis: {x: 0, y: 0}
   _lookAxis: {x: 0, y: 0}
   _zoomDelta: 0
+  _lastConsumedSequence: 0
 --- !u!114 &693288949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7068,17 +7070,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 693288946}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f6bb8b4590a4f24baf5e2e81b57de21, type: 3}
+  m_Script: {fileID: 11500000, guid: 7efde282effaaba4f8e425e4a1de8234, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _input: {fileID: 693288948}
-  _motor: {fileID: 693288951}
-  _groundProbe: {fileID: 0}
-  _cameraTransform: {fileID: 330585546}
-  _rotationRoot: {fileID: 693288947}
-  _moveSpeed: 4
-  _rotationSharpness: 12
-  _moveDeadZone: 0.1
 --- !u!114 &693288950
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7088,20 +7082,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 693288946}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f8d0ff65c5f4fe7a60505f736a9dc23, type: 3}
+  m_Script: {fileID: 11500000, guid: 6f146df3dcf1e0b4295a2dfdf6634a61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _groundLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  _sphereRadius: 0.12
-  _probeStartHeight: 0.6
-  _probeDistance: 1
-  _maxWalkableSlope: 45
-  _drawGizmos: 1
-  <IsGrounded>k__BackingField: 0
-  <IsWalkable>k__BackingField: 0
-  <SlopeAngle>k__BackingField: 0
+  _rotationSharpness: 12
+  _moveSpeedSharpness: 12
+  _maxStableMoveSpeed: 5
+  _gravity: 18
+  _gravityDir: {x: 0, y: -1, z: 0}
 --- !u!114 &693288951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7111,26 +7099,62 @@ MonoBehaviour:
   m_GameObject: {fileID: 693288946}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8f4bc4f2b7d4f33a9102788f66cc3a4, type: 3}
+  m_Script: {fileID: 11500000, guid: 4d1bc5515e3ab954e80599c538834774, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _groundProbe: {fileID: 0}
-  _collisionLayers:
+  Capsule: {fileID: 693288952}
+  CapsuleRadius: 0.15
+  CapsuleHeight: 1.52
+  CapsuleYOffset: 0.76
+  CapsulePhysicsMaterial: {fileID: 0}
+  GroundDetectionExtraDistance: 0
+  MaxStableSlopeAngle: 60
+  StableGroundLayers:
     serializedVersion: 2
     m_Bits: 64
-  _capsuleHeight: 1.52
-  _capsuleRadius: 0.15
-  _skinWidth: 0.01
-  _maxSlideIterations: 3
-  _maxWalkableSlope: 45
-  _groundProbeRadius: 0.12
-  _groundProbeStartHeight: 0.6
-  _groundProbeDistance: 1
-  _groundSnapDistance: 0.45
-  _maxStepHeight: 0.35
-  _minStepHeight: 0.03
-  _stepForwardOvershoot: 0.06
-  _drawGizmos: 1
+  DiscreteCollisionEvents: 0
+  StepHandling: 1
+  MaxStepHeight: 0.35
+  AllowSteppingWithoutStableGrounding: 0
+  MinRequiredStepDepth: 0
+  LedgeAndDenivelationHandling: 1
+  MaxStableDistanceFromLedge: 0
+  MaxVelocityForLedgeSnap: 0
+  MaxStableDenivelationAngle: 180
+  InteractiveRigidbodyHandling: 1
+  RigidbodyInteractionType: 0
+  SimulatedCharacterMass: 1
+  PreserveAttachedRigidbodyMomentum: 1
+  HasPlanarConstraint: 0
+  PlanarConstraintAxis: {x: 0, y: 0, z: 1}
+  MaxMovementIterations: 5
+  MaxDecollisionIterations: 1
+  CheckMovementInitialOverlaps: 1
+  KillVelocityWhenExceedMaxMovementIterations: 1
+  KillRemainingMovementWhenExceedMaxMovementIterations: 1
+--- !u!136 &693288952
+CapsuleCollider:
+  m_ObjectHideFlags: 8
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 693288946}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.15
+  m_Height: 1.52
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.76, z: 0}
 --- !u!43 &695349655
 Mesh:
   m_ObjectHideFlags: 0

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [DisallowMultipleComponent]
-[DefaultExecutionOrder(-100)]
+[DefaultExecutionOrder(-300)]
 public sealed class PlayerInputReader : MonoBehaviour
 {
     private PlayerInputAction _inputAction;
@@ -18,6 +18,9 @@ public sealed class PlayerInputReader : MonoBehaviour
     [SerializeField] private Vector2 _moveAxis;
     [SerializeField] private Vector2 _lookAxis;
     [SerializeField] private float _zoomDelta;
+    [SerializeField] private int _lastConsumedSequence;
+
+    private int _nextSequence;
 
     public Vector2 MoveAxis => _moveAxis;
     public Vector2 LookAxis => _lookAxis;
@@ -30,6 +33,9 @@ public sealed class PlayerInputReader : MonoBehaviour
     public bool MoveSwitchPressed { get; private set; }
     public bool MoveSwitchReleased { get; private set; }
     public bool MoveSwitchHeld { get; private set; }
+    public bool ClimbPressed => MoveSwitchPressed;
+    public bool ClimbReleased => MoveSwitchReleased;
+    public bool ClimbHeld => MoveSwitchHeld;
 
     public bool AttackPressed { get; private set; }
     public bool AttackReleased { get; private set; }
@@ -38,6 +44,8 @@ public sealed class PlayerInputReader : MonoBehaviour
     public bool DashPressed { get; private set; }
     public bool DashReleased { get; private set; }
     public bool DashHeld { get; private set; }
+
+    public CharacterInputFrame LastConsumedFrame { get; private set; }
 
     private void Awake()
     {
@@ -70,14 +78,40 @@ public sealed class PlayerInputReader : MonoBehaviour
 
     private void Update()
     {
-        _moveAxis = _moveAction == null ? Vector2.zero : _moveAction.ReadValue<Vector2>();
-        _lookAxis = _lookAction == null ? Vector2.zero : _lookAction.ReadValue<Vector2>();
-        _zoomDelta = _zoomAction == null ? 0.0f : _zoomAction.ReadValue<Vector2>().y;
+        ReadContinuousInputs();
     }
 
-    private void LateUpdate()
+    public CharacterInputFrame PeekFrame()
     {
+        ReadContinuousInputs();
+
+        return new CharacterInputFrame(
+            _nextSequence,
+            _moveAxis,
+            _lookAxis,
+            _zoomDelta,
+            JumpPressed,
+            JumpReleased,
+            JumpHeld,
+            ClimbPressed,
+            ClimbReleased,
+            ClimbHeld,
+            AttackPressed,
+            AttackReleased,
+            AttackHeld,
+            DashPressed,
+            DashReleased,
+            DashHeld);
+    }
+
+    public CharacterInputFrame ConsumeFrame()
+    {
+        CharacterInputFrame frame = PeekFrame();
+        LastConsumedFrame = frame;
+        _lastConsumedSequence = frame.Sequence;
+        _nextSequence++;
         ClearFrameInputs();
+        return frame;
     }
 
     private void OnDestroy()
@@ -92,6 +126,13 @@ public sealed class PlayerInputReader : MonoBehaviour
         _lookAction = null;
         _zoomAction = null;
         _dashAction = null;
+    }
+
+    private void ReadContinuousInputs()
+    {
+        _moveAxis = _moveAction == null ? Vector2.zero : _moveAction.ReadValue<Vector2>();
+        _lookAxis = _lookAction == null ? Vector2.zero : _lookAction.ReadValue<Vector2>();
+        _zoomDelta = _zoomAction == null ? 0.0f : _zoomAction.ReadValue<Vector2>().y;
     }
 
     private void ClearFrameInputs()
@@ -222,4 +263,83 @@ public sealed class PlayerInputReader : MonoBehaviour
         DashReleased = true;
         DashHeld = false;
     }
+}
+
+[System.Serializable]
+public readonly struct CharacterInputFrame
+{
+    public CharacterInputFrame(
+        int sequence,
+        Vector2 moveAxis,
+        Vector2 lookAxis,
+        float zoomDelta,
+        bool jumpPressed,
+        bool jumpReleased,
+        bool jumpHeld,
+        bool climbPressed,
+        bool climbReleased,
+        bool climbHeld,
+        bool attackPressed,
+        bool attackReleased,
+        bool attackHeld,
+        bool dashPressed,
+        bool dashReleased,
+        bool dashHeld)
+    {
+        Sequence = sequence;
+        MoveAxis = moveAxis;
+        LookAxis = lookAxis;
+        ZoomDelta = zoomDelta;
+        JumpPressed = jumpPressed;
+        JumpReleased = jumpReleased;
+        JumpHeld = jumpHeld;
+        ClimbPressed = climbPressed;
+        ClimbReleased = climbReleased;
+        ClimbHeld = climbHeld;
+        AttackPressed = attackPressed;
+        AttackReleased = attackReleased;
+        AttackHeld = attackHeld;
+        DashPressed = dashPressed;
+        DashReleased = dashReleased;
+        DashHeld = dashHeld;
+    }
+
+    public int Sequence { get; }
+    public Vector2 MoveAxis { get; }
+    public Vector2 LookAxis { get; }
+    public float ZoomDelta { get; }
+
+    public bool JumpPressed { get; }
+    public bool JumpReleased { get; }
+    public bool JumpHeld { get; }
+
+    public bool ClimbPressed { get; }
+    public bool ClimbReleased { get; }
+    public bool ClimbHeld { get; }
+
+    public bool AttackPressed { get; }
+    public bool AttackReleased { get; }
+    public bool AttackHeld { get; }
+
+    public bool DashPressed { get; }
+    public bool DashReleased { get; }
+    public bool DashHeld { get; }
+
+    public static CharacterInputFrame Empty { get; } = new CharacterInputFrame(
+        0,
+        Vector2.zero,
+        Vector2.zero,
+        0.0f,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false);
 }
