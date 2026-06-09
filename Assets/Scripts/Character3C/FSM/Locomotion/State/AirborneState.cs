@@ -1,7 +1,7 @@
 
 public class AirborneState : LocomotionStateBase
 {
-    public AirborneState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, Context context) : base(id, stateMachine, context)
+    public AirborneState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context) : base(id, stateMachine, context)
     {
     }
 

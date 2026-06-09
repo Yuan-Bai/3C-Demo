@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-public class Context
+public class LocomotionContext
 {
     public bool IsStableOnGround;
     public bool HasMoveInput;
@@ -11,4 +11,6 @@ public class Context
     public Vector3 MoveDirection;
     public Vector3 LookDirection;
     public CharacterInputFrame InputFrame;
+
+    public GroundedGait GroundedGait;
 }

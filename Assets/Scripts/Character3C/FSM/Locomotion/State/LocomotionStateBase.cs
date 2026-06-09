@@ -7,10 +7,11 @@ public class LocomotionStateBase : IState<LocomotionStateId>
 {
     public LocomotionStateId Id { get; }
 
-    protected Context Context { get; }
+    protected LocomotionContext Context { get; }
     protected StateMachine<LocomotionStateId> StateMachine { get; }
+    protected CharacterInputFrame InputFrame => Context.InputFrame;
 
-    public LocomotionStateBase(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, Context context)
+    public LocomotionStateBase(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context)
     {
         Id = id;
         StateMachine = stateMachine;
@@ -19,12 +20,10 @@ public class LocomotionStateBase : IState<LocomotionStateId>
 
     public virtual void Enter()
     {
-        Debug.Log("进入状态：" + StateMachine.CurrentStateId);
     }
 
     public virtual void Exit()
     {
-        Debug.Log("退出状态：" + StateMachine.CurrentStateId);
     }
 
     public virtual void Tick(float deltaTime)
