@@ -3,8 +3,6 @@ public enum LocomotionStateId
     Grounded,
     Airborne,
     Climbing,
-    Landing,
-    Dashing,
 }
 
 public enum GroundedGait
@@ -13,4 +11,40 @@ public enum GroundedGait
     Walk,
     Run,
     Sprint,
+}
+
+public enum AirbornePhase
+{
+    Rising,
+    Falling,
+}
+
+public enum GroundedActionId
+{
+    None,
+    Dash,
+    SprintImpulse,
+    MoveStop,
+    JumpStart,
+}
+
+public enum AirborneActionId
+{
+    None,
+    Jump,
+    JumpSecond,
+}
+
+public enum ClimbActionId
+{
+    None,
+    Start,
+    UpLeft,
+    UpRight,
+    DownLeft,
+    DownRight,
+    SideLeft,
+    SideRight,
+    Dash,
+    ToTop,
 }

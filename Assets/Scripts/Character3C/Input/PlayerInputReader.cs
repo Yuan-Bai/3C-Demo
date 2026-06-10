@@ -33,9 +33,6 @@ public sealed class PlayerInputReader : MonoBehaviour
     public bool MoveSwitchPressed { get; private set; }
     public bool MoveSwitchReleased { get; private set; }
     public bool MoveSwitchHeld { get; private set; }
-    public bool ClimbPressed => MoveSwitchPressed;
-    public bool ClimbReleased => MoveSwitchReleased;
-    public bool ClimbHeld => MoveSwitchHeld;
 
     public bool AttackPressed { get; private set; }
     public bool AttackReleased { get; private set; }
@@ -93,9 +90,9 @@ public sealed class PlayerInputReader : MonoBehaviour
             JumpPressed,
             JumpReleased,
             JumpHeld,
-            ClimbPressed,
-            ClimbReleased,
-            ClimbHeld,
+            MoveSwitchPressed,
+            MoveSwitchReleased,
+            MoveSwitchHeld,
             AttackPressed,
             AttackReleased,
             AttackHeld,
@@ -276,9 +273,9 @@ public readonly struct CharacterInputFrame
         bool jumpPressed,
         bool jumpReleased,
         bool jumpHeld,
-        bool climbPressed,
-        bool climbReleased,
-        bool climbHeld,
+        bool moveSwitchPressed,
+        bool moveSwitchReleased,
+        bool moveSwitchHeld,
         bool attackPressed,
         bool attackReleased,
         bool attackHeld,
@@ -293,9 +290,9 @@ public readonly struct CharacterInputFrame
         JumpPressed = jumpPressed;
         JumpReleased = jumpReleased;
         JumpHeld = jumpHeld;
-        ClimbPressed = climbPressed;
-        ClimbReleased = climbReleased;
-        ClimbHeld = climbHeld;
+        MoveSwitchPressed = moveSwitchPressed;
+        MoveSwitchReleased = moveSwitchReleased;
+        MoveSwitchHeld = moveSwitchHeld;
         AttackPressed = attackPressed;
         AttackReleased = attackReleased;
         AttackHeld = attackHeld;
@@ -313,9 +310,9 @@ public readonly struct CharacterInputFrame
     public bool JumpReleased { get; }
     public bool JumpHeld { get; }
 
-    public bool ClimbPressed { get; }
-    public bool ClimbReleased { get; }
-    public bool ClimbHeld { get; }
+    public bool MoveSwitchPressed { get; }
+    public bool MoveSwitchReleased { get; }
+    public bool MoveSwitchHeld { get; }
 
     public bool AttackPressed { get; }
     public bool AttackReleased { get; }

@@ -13,4 +13,11 @@ public class LocomotionContext
     public CharacterInputFrame InputFrame;
 
     public GroundedGait GroundedGait;
+    public GroundedActionId GroundedAction;
+    public float GroundedActionElapsedTime;
+    public float GroundedDashHeldTime;
+
+    public AirbornePhase AirbornePhase;
+    public AirborneActionId AirborneAction;
+    public float AirborneActionElapsedTime;
 }

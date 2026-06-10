@@ -8,6 +8,8 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
     [SerializeField] private float _rotationSharpness = 12f;
     [SerializeField] private float _moveSpeedSharpness = 12f;
     [SerializeField] private float _maxStableMoveSpeed = 5f;
+    [SerializeField] private float _jumpSpeed = 10f;
+    [SerializeField] private float _secondJumpSpeed = 8f;
     [SerializeField] private float _gravity = 12f;
     [SerializeField] private Vector3 _gravityDir = Vector3.down;
 
@@ -18,7 +20,9 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
     private Vector3 _moveDirection;
     private Vector3 _lookDirection;
     private LocomotionContext _locomotionContext;
+    private AirborneActionId _lastAppliedAirborneAction;
 
+    public event Action<float> MotorBeforeUpdated;
     public event Action<float> MotorUpdated;
 
     private void Awake()
@@ -49,14 +53,7 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
             return;
         }
 
-        _locomotionContext.IsStableOnGround = _motor.GroundingStatus.IsStableOnGround;
-        _locomotionContext.HasMoveInput = _moveDirection.magnitude >= 1e-6;
-        _locomotionContext.HorizontalSpeed = new Vector3(_motor.Velocity.x, 0.0f, _motor.Velocity.z);
-        _locomotionContext.VerticalSpeed = _motor.Velocity.y;
-        _locomotionContext.MoveDirection = _moveDirection;
-        _locomotionContext.LookDirection = _lookDirection;
-        _locomotionContext.InputFrame = _inputFrame;
-
+        WriteLocomotionContext();
         MotorUpdated?.Invoke(deltaTime);
     }
 
@@ -68,6 +65,8 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
 
         if (_motor == null || _camTransform == null)
         {
+            WriteLocomotionContext();
+            MotorBeforeUpdated?.Invoke(deltaTime);
             return;
         }
 
@@ -80,6 +79,8 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
 
         if (forward.magnitude < 1e-6)
         {
+            WriteLocomotionContext();
+            MotorBeforeUpdated?.Invoke(deltaTime);
             return;
         }
 
@@ -89,10 +90,14 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
         Vector2 moveAxis = Vector2.ClampMagnitude(_inputFrame.MoveAxis, 1.0f);
         if (moveAxis.magnitude < 1e-6)
         {
+            WriteLocomotionContext();
+            MotorBeforeUpdated?.Invoke(deltaTime);
             return;
         }
 
         _moveDirection = Quaternion.LookRotation(forward, characterUp) * new Vector3(moveAxis.x, 0.0f, moveAxis.y);
+        WriteLocomotionContext();
+        MotorBeforeUpdated?.Invoke(deltaTime);
     }
 
     public bool IsColliderValidForCollisions(Collider coll)
@@ -145,8 +150,18 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
             return;
         }
 
+        if (_locomotionContext != null && _locomotionContext.AirborneAction == AirborneActionId.None)
+        {
+            _lastAppliedAirborneAction = AirborneActionId.None;
+        }
+
         if (_motor.GroundingStatus.IsStableOnGround)
         {
+            if (TryApplyAirborneActionImpulse(ref currentVelocity))
+            {
+                return;
+            }
+
             float speedMultiplier = _locomotionContext.GroundedGait switch
             {
                 GroundedGait.Idle => 0f,
@@ -164,7 +179,52 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
         }
         else
         {
+            TryApplyAirborneActionImpulse(ref currentVelocity);
             currentVelocity += _gravityDir * _gravity * deltaTime;
         }
+    }
+
+    private void WriteLocomotionContext()
+    {
+        if (_motor == null || _locomotionContext == null)
+        {
+            return;
+        }
+
+        _locomotionContext.IsStableOnGround = _motor.GroundingStatus.IsStableOnGround;
+        _locomotionContext.HasMoveInput = _moveDirection.magnitude >= 1e-6;
+        _locomotionContext.HorizontalSpeed = new Vector3(_motor.Velocity.x, 0.0f, _motor.Velocity.z);
+        _locomotionContext.VerticalSpeed = _motor.Velocity.y;
+        _locomotionContext.MoveDirection = _moveDirection;
+        _locomotionContext.LookDirection = _lookDirection;
+        _locomotionContext.InputFrame = _inputFrame;
+    }
+
+    private bool TryApplyAirborneActionImpulse(ref Vector3 currentVelocity)
+    {
+        if (_locomotionContext == null ||
+            _locomotionContext.AirborneAction == AirborneActionId.None ||
+            _locomotionContext.AirborneAction == _lastAppliedAirborneAction)
+        {
+            return false;
+        }
+
+        float impulseSpeed = _locomotionContext.AirborneAction switch
+        {
+            AirborneActionId.Jump => _jumpSpeed,
+            AirborneActionId.JumpSecond => _secondJumpSpeed,
+            _ => 0.0f,
+        };
+
+        if (impulseSpeed <= 0.0f)
+        {
+            return false;
+        }
+
+        Vector3 verticalVelocity = Vector3.Project(currentVelocity, _motor.CharacterUp);
+        currentVelocity = currentVelocity - verticalVelocity + _motor.CharacterUp * impulseSpeed;
+        _motor.ForceUnground();
+        _lastAppliedAirborneAction = _locomotionContext.AirborneAction;
+        return true;
     }
 }
