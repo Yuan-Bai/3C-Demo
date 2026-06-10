@@ -7,6 +7,7 @@ public class StateMachine<TStateId> where TStateId : Enum
 {
     private readonly Dictionary<TStateId, IState<TStateId>> _states = new();
     private IState<TStateId> _currentState;
+    public IState<TStateId> CurrentState => _currentState;
     public TStateId CurrentStateId {get; private set;}
 
     public void AddState(IState<TStateId> state)

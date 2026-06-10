@@ -162,12 +162,12 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
                 return;
             }
 
-            float speedMultiplier = _locomotionContext.GroundedGait switch
+            float speedMultiplier = _locomotionContext.GroundedStateId switch
             {
-                GroundedGait.Idle => 0f,
-                GroundedGait.Walk => 0.5f,
-                GroundedGait.Run => 1f,
-                GroundedGait.Sprint => 1.3f,
+                GroundedStateId.Idle => 0f,
+                GroundedStateId.Walk => 0.5f,
+                GroundedStateId.Run => 1f,
+                GroundedStateId.Sprint => 1.3f,
                 _ => 1f,
             };
             Vector3 targetVelocity = _moveDirection * _maxStableMoveSpeed * speedMultiplier;

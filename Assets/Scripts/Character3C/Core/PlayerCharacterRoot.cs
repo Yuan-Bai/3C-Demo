@@ -8,7 +8,7 @@ public class PlayerCharacterRoot : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private LocomotionStateId _debugLocomotionState;
-    [SerializeField] private GroundedGait _debugGroundedGait;
+    [SerializeField] private GroundedStateId _debugGroundedStateId;
     [SerializeField] private GroundedActionId _debugGroundedAction;
     [SerializeField] private float _debugGroundedActionElapsedTime;
     [SerializeField] private float _debugGroundedDashHeldTime;
@@ -18,6 +18,7 @@ public class PlayerCharacterRoot : MonoBehaviour
 
     private readonly StateMachine<LocomotionStateId> _locomotionStateMachine = new();
     private readonly LocomotionContext _locomotionContext = new();
+
 
     private void Awake()
     {
@@ -43,6 +44,11 @@ public class PlayerCharacterRoot : MonoBehaviour
             _kccController.MotorBeforeUpdated += OnMotorBeforeUpdated;
             _kccController.MotorUpdated += OnMotorUpdated;
         }
+
+        if (_animancerController != null)
+        {
+            _animancerController.AnimationEnded += OnAnimationEnded;
+        }
     }
 
     private void OnDisable()
@@ -52,19 +58,33 @@ public class PlayerCharacterRoot : MonoBehaviour
             _kccController.MotorBeforeUpdated -= OnMotorBeforeUpdated;
             _kccController.MotorUpdated -= OnMotorUpdated;
         }
+
+        if (_animancerController != null)
+        {
+            _animancerController.AnimationEnded -= OnAnimationEnded;
+        }
     }
 
     private void OnMotorBeforeUpdated(float deltaTime)
     {
         _locomotionStateMachine.Tick(deltaTime);
         _debugLocomotionState = _locomotionStateMachine.CurrentStateId;
+
+        _animancerController?.UpdateAnimation(_locomotionStateMachine.CurrentStateId, _locomotionContext);
+    }
+
+    private void OnAnimationEnded(CharacterAnimationKey key)
+    {
+        if (_locomotionStateMachine.CurrentState is IAnimationEventReceiver receiver)
+        {
+            receiver.OnAnimationEnded(key);
+        }
     }
 
     private void OnMotorUpdated(float deltaTime)
     {
         _debugLocomotionState = _locomotionStateMachine.CurrentStateId;
-        _debugGroundedGait = _locomotionContext.GroundedGait;
-        _debugGroundedAction = _locomotionContext.GroundedAction;
+        _debugGroundedStateId = _locomotionContext.GroundedStateId;
         _debugGroundedActionElapsedTime = _locomotionContext.GroundedActionElapsedTime;
         _debugGroundedDashHeldTime = _locomotionContext.GroundedDashHeldTime;
         _debugAirbornePhase = _locomotionContext.AirbornePhase;

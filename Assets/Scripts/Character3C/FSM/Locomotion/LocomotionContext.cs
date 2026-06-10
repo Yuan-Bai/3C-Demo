@@ -12,8 +12,7 @@ public class LocomotionContext
     public Vector3 LookDirection;
     public CharacterInputFrame InputFrame;
 
-    public GroundedGait GroundedGait;
-    public GroundedActionId GroundedAction;
+    public GroundedStateId GroundedStateId;
     public float GroundedActionElapsedTime;
     public float GroundedDashHeldTime;
 

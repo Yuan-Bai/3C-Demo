@@ -5,6 +5,17 @@ public enum LocomotionStateId
     Climbing,
 }
 
+public enum GroundedStateId
+{
+    Idle,
+    Walk,
+    Run,
+    Sprint,
+    Dash,
+    SprintImpulse,
+    MoveStop,
+}
+
 public enum GroundedGait
 {
     Idle,
