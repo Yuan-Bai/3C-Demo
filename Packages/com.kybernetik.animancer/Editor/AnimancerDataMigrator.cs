@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 #if UNITY_EDITOR
 
@@ -24,7 +24,7 @@ namespace Animancer.Editor
 
         /// <summary>The directory where any newly created files will be saved.</summary>
         public const string
-            MigratedDataDirectory = "Assets/Animancer Migrated Data";
+            MigratedDataDirectory = "Animancer Migrated Data";
 
         /************************************************************************************************************************/
         #region Entry Point
@@ -172,8 +172,7 @@ namespace Animancer.Editor
                 Debug.Log(
                     $"Data Migration Complete." +
                     $" Modified {modifiedFileCount} files in {timer}." +
-                    $" Please check the modified files and report any issues to" +
-                    $" {Strings.DocsURLs.DeveloperEmail}");
+                    $" Please check the modified files and report any issues to {Strings.DocsURLs.DeveloperEmail}");
 
                 WarnAboutUnSharedChanges();
 
@@ -257,7 +256,7 @@ namespace Animancer.Editor
         /// </summary>
         private static void MigrateEvents(ref string text)
         {
-            const string Prefix = "_" + nameof(IHasEvents.Events) + ":";
+            const string Prefix = "_" + nameof(ITransitionWithEvents.Events) + ":";
 
             var index = 0;
             while ((index = text.IndexOf(Prefix, index)) >= 0)
@@ -354,10 +353,8 @@ namespace Animancer.Editor
 
         private static void MigrateEventName(ref string text, int start, string name, out int end)
         {
-            StringAsset.FindOrCreate(name, MigratedDataDirectory, out var path);
-
+            GetOrCreateStringAsset(name, out var path, out var guid);
             var fileID = GetFileID(path);
-            var guid = AssetDatabase.AssetPathToGUID(path);
 
             end = start + name.Length;
 
@@ -368,6 +365,37 @@ namespace Animancer.Editor
             end = start + newReference.Length;
 
             text = $"{before}{newReference}{after}";
+        }
+
+        /************************************************************************************************************************/
+
+        private static StringAsset GetOrCreateStringAsset(StringReference name, out string path, out string guid)
+        {
+            var filter = $"{name} t:{nameof(StringAsset)}";
+            var guids = AssetDatabase.FindAssets(filter);
+
+            for (int i = 0; i < guids.Length; i++)
+            {
+                guid = guids[i];
+                path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<StringAsset>(path);
+                if (asset != null && asset.Name == name)
+                    return asset;
+            }
+
+            var key = ScriptableObject.CreateInstance<StringAsset>();
+            key.name = name;
+
+            AssetDatabase.CreateFolder("Assets", MigratedDataDirectory);
+
+            path = Path.Combine("Assets", MigratedDataDirectory, name + ".asset");
+            AssetDatabase.CreateAsset(key, path);
+
+            guid = AssetDatabase.AssetPathToGUID(path);
+
+            Debug.Log($"Created {nameof(StringAsset)} for event name: {name}", key);
+
+            return key;
         }
 
         /************************************************************************************************************************/
@@ -667,6 +695,11 @@ namespace Animancer.Editor
             "5415cf2115901c345af7680b044d4604",// PlayableAssetTransitionAsset.
         };
 
+        /// <summary>[Animancer v8.0]
+        /// Removed the classes derived from <see cref="TransitionAssetBase"/>
+        /// for each individual transition type except <see cref="TransitionAsset"/>
+        /// since its [<see cref="SerializeReference"/>] can hold any of them without changing the asset type.
+        /// </summary>
         private void MigrateTransitionAssets(ref string fileText)
         {
             const string

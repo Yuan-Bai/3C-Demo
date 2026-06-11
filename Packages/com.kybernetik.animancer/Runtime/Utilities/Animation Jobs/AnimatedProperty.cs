@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 using UnityEngine;
@@ -39,9 +39,7 @@ namespace Animancer
         /// Allocates room for a specified number of properties to be filled by
         /// <see cref="InitializeProperty(int, Transform, Type, string)"/>.
         /// </summary>
-        public AnimatedProperty(
-            IAnimancerComponent animancer,
-            int propertyCount,
+        public AnimatedProperty(IAnimancerComponent animancer, int propertyCount,
             NativeArrayOptions options = NativeArrayOptions.ClearMemory)
         {
             _Properties = new(propertyCount, Allocator.Persistent, options);
@@ -95,24 +93,20 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <summary>Returns the value of the first property.</summary>
-        public TValue Value
-            => this[0];
+        public TValue Value => this[0];
 
         /// <summary>Returns the value of the first property.</summary>
-        public static implicit operator TValue(AnimatedProperty<TJob, TValue> properties)
-            => properties[0];
+        public static implicit operator TValue(AnimatedProperty<TJob, TValue> properties) => properties[0];
 
         /************************************************************************************************************************/
 
         /// <summary>Returns the value of the property at the specified `index`.</summary>
         /// <remarks>This method is identical to <see cref="this[int]"/>.</remarks>
-        public TValue GetValue(int index)
-            => _Values[index];
+        public TValue GetValue(int index) => _Values[index];
 
         /// <summary>Returns the value of the property at the specified `index`.</summary>
         /// <remarks>This indexer is identical to <see cref="GetValue(int)"/>.</remarks>
-        public TValue this[int index]
-            => _Values[index];
+        public TValue this[int index] => _Values[index];
 
         /************************************************************************************************************************/
 

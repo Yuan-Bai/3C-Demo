@@ -7099,7 +7099,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _rotationSharpness: 12
   _moveSpeedSharpness: 12
-  _maxStableMoveSpeed: 5
+  _maxStableMoveSpeed: 2
   _jumpSpeed: 10
   _secondJumpSpeed: 8
   _gravity: 18
@@ -7182,42 +7182,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animancer: {fileID: 0}
-  _idle:
+  _lockAnimatedRootToInitialLocalPose: 0
+  _animatedRoot: {fileID: 0}
+  _move:
     _FadeDuration: 0.25
     _Speed: 1
     _Events:
       _NormalizedTimes: []
       _Callbacks: []
       _Names: []
-    _Clip: {fileID: 4121983931797898878, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
-    _NormalizedStartTime: NaN
-  _walk:
-    _FadeDuration: 0.25
-    _Speed: 1
-    _Events:
-      _NormalizedTimes: []
-      _Callbacks: []
-      _Names: []
-    _Clip: {fileID: 5745349231838207218, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
-    _NormalizedStartTime: NaN
-  _run:
-    _FadeDuration: 0.25
-    _Speed: 1
-    _Events:
-      _NormalizedTimes: []
-      _Callbacks: []
-      _Names: []
-    _Clip: {fileID: 5978669590653596144, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
-    _NormalizedStartTime: NaN
-  _sprint:
-    _FadeDuration: 0.25
-    _Speed: 1
-    _Events:
-      _NormalizedTimes: []
-      _Callbacks: []
-      _Names: []
-    _Clip: {fileID: 2869652563980575300, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
-    _NormalizedStartTime: NaN
+    _Animations:
+    - {fileID: 4121983931797898878, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
+    - {fileID: 5745349231838207218, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
+    - {fileID: 5978669590653596144, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
+    - {fileID: 2869652563980575300, guid: d2cfbe837267f2d48978d8adf6c75a18, type: 3}
+    _Speeds: []
+    _SynchronizeChildren: 00
+    _Thresholds:
+    - 0
+    - 0.8
+    - 2
+    - 4
+    _DefaultParameter: 0
+    _ExtrapolateSpeed: 1
+    _ParameterName: {fileID: 11400000, guid: d7219004b0ed05d4a8450d75960f55cc, type: 2}
   _dashF:
     _FadeDuration: 0.25
     _Speed: 1
@@ -7367,6 +7355,7 @@ MonoBehaviour:
     _Clip: {fileID: -3302896246436854854, guid: d2cfbe837267f2d48978d8adf6c75a18,
       type: 3}
     _NormalizedStartTime: NaN
+  _speedParameter: {fileID: 11400000, guid: d7219004b0ed05d4a8450d75960f55cc, type: 2}
   references:
     version: 2
     RefIds: []
@@ -13761,7 +13750,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.000000028794453, y: 0.000000004790777, z: -0.0000000036595695,
     w: 1}
-  m_LocalPosition: {x: -0.000000038326217, y: -0.00000023035562, z: -4}
+  m_LocalPosition: {x: 0, y: 0, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

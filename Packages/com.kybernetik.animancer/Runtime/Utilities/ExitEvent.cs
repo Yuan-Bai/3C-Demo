@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 
@@ -84,16 +84,16 @@ namespace Animancer
         ///     var state = animancer.Play(clip);
         ///     
         ///     // One line initialization:
-        ///     (_OnStateExited ??= new(state, OnStateExited)).Enable();
+        ///     (_OnClipExit ??= new(state, OnStateExited)).Enable();
         ///     
         ///     // Or two lines:
-        ///     _OnStateExited ??= new(state, OnStateExited);
-        ///     _OnStateExited.Enable();
+        ///     _OnClipExit ??= new(state, OnStateExited);
+        ///     _OnClipExit.Enable();
         /// }
         /// 
         /// private void OnStateExited()
         /// {
-        ///     Debug.Log(_OnStateExited.State + " Exited");
+        ///     Debug.Log(_OnClipExit.State + " Exited");
         /// }
         /// </code></remarks>
         /// 
@@ -103,7 +103,7 @@ namespace Animancer
             bool invokeOnStartExiting = false)
         {
             _Node = node;
-            _Callback = callback;
+            _Callback = Callback;
             InvokeOnStartExiting = invokeOnStartExiting;
         }
 

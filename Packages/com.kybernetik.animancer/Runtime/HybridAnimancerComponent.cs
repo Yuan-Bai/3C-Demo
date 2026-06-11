@@ -1,8 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
-
-#if ! UNITY_EDITOR
-#pragma warning disable CS0618 // Type or member is obsolete (for ControllerState in Animancer Lite).
-#endif
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,9 +18,6 @@ namespace Animancer
     /// </remarks>
     /// https://kybernetik.com.au/animancer/api/Animancer/HybridAnimancerComponent
     /// 
-#if !UNITY_EDITOR
-    [System.Obsolete(Validate.ProOnlyMessage)]
-#endif
     [AddComponentMenu(Strings.MenuPrefix + "Hybrid Animancer Component")]
     [AnimancerHelpUrl(typeof(HybridAnimancerComponent))]
     public class HybridAnimancerComponent : NamedAnimancerComponent
@@ -106,6 +99,14 @@ namespace Animancer
 
             PlayController();
             base.OnEnable();
+
+#if UNITY_ASSERTIONS
+            if (Animator != null && Animator.runtimeAnimatorController != null)
+                OptionalWarning.NativeControllerHybrid.Log($"An Animator Controller is assigned to the" +
+                    $" {nameof(Animator)} component while also using a {nameof(HybridAnimancerComponent)}." +
+                    $" Most likely only one of them is being used so the other should be removed." +
+                    $" See the documentation for more information: {Strings.DocsURLs.AnimatorControllers}", this);
+#endif
         }
 
         /************************************************************************************************************************/
@@ -694,12 +695,12 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <summary>
-        /// Advances time by the specified value (in seconds)
-        /// and immediately applies the current states of all animations to the animated objects.
+        /// Advances time by the specified value (in seconds) and immediately applies the current states of all
+        /// animations to the animated objects.
         /// </summary>
         /// <remarks>
-        /// This is an extension method to avoid being treated as a <see cref="MonoBehaviour"/>
-        /// <code>Update</code> message and getting called every frame.
+        /// This is an extension method to avoid being treated as a <see cref="MonoBehaviour"/> <code>Update</code>
+        /// message and getting called every frame.
         /// </remarks>
         public static void Update(this HybridAnimancerComponent animancer, float deltaTime)
             => animancer.Evaluate(deltaTime);

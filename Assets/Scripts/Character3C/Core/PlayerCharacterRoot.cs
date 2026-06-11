@@ -1,10 +1,16 @@
+using Animancer;
 using UnityEngine;
 
+public delegate void PlayIfChanged(CharacterAnimationKey key, ClipTransition transition, bool notifyEnd=false);
+
+[RequireComponent(typeof(KccCharacterController))]
+[RequireComponent(typeof(CharacterAnimancerController))]
 public class PlayerCharacterRoot : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private KccCharacterController _kccController;
     [SerializeField] private CharacterAnimancerController _animancerController;
+    [SerializeField] private ICharacterAnimationDriver _animation;
 
     [Header("Debug")]
     [SerializeField] private LocomotionStateId _debugLocomotionState;
@@ -24,14 +30,14 @@ public class PlayerCharacterRoot : MonoBehaviour
     {
         _kccController ??= GetComponent<KccCharacterController>();
         _animancerController ??= GetComponent<CharacterAnimancerController>();
-        if (_kccController != null)
-        {
-            _kccController.SetLocomotionContext(_locomotionContext);
-        }
+        _animation ??= GetComponent<CharacterAnimancerController>();
+        
+        _kccController.SetLocomotionContext(_locomotionContext);
+        _animancerController.SetLocomotionContext(_locomotionContext);
 
-        _locomotionStateMachine.AddState(new GroundedState(LocomotionStateId.Grounded, _locomotionStateMachine, _locomotionContext));
-        _locomotionStateMachine.AddState(new AirborneState(LocomotionStateId.Airborne, _locomotionStateMachine, _locomotionContext));
-        _locomotionStateMachine.AddState(new ClimbingState(LocomotionStateId.Climbing, _locomotionStateMachine, _locomotionContext));
+        _locomotionStateMachine.AddState(new GroundedState(LocomotionStateId.Grounded, _locomotionStateMachine, _locomotionContext, _animation));
+        _locomotionStateMachine.AddState(new AirborneState(LocomotionStateId.Airborne, _locomotionStateMachine, _locomotionContext, _animation));
+        _locomotionStateMachine.AddState(new ClimbingState(LocomotionStateId.Climbing, _locomotionStateMachine, _locomotionContext, _animation));
 
         _locomotionStateMachine.ChangeState(LocomotionStateId.Grounded);
         _debugLocomotionState = _locomotionStateMachine.CurrentStateId;
@@ -70,7 +76,7 @@ public class PlayerCharacterRoot : MonoBehaviour
         _locomotionStateMachine.Tick(deltaTime);
         _debugLocomotionState = _locomotionStateMachine.CurrentStateId;
 
-        _animancerController?.UpdateAnimation(_locomotionStateMachine.CurrentStateId, _locomotionContext);
+        _animancerController?.UpdateAnimation(_locomotionStateMachine.CurrentStateId);
     }
 
     private void OnAnimationEnded(CharacterAnimationKey key)

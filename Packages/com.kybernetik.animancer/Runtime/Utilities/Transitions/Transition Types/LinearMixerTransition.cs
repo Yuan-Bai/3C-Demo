@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 using UnityEngine;
@@ -8,9 +8,6 @@ namespace Animancer
     /// <inheritdoc/>
     /// https://kybernetik.com.au/animancer/api/Animancer/LinearMixerTransition
     [Serializable]
-#if ! UNITY_EDITOR
-    [System.Obsolete(Validate.ProOnlyMessage)]
-#endif
     public class LinearMixerTransition : MixerTransition<LinearMixerState, float>,
         ICopyable<LinearMixerTransition>
     {
@@ -147,11 +144,7 @@ namespace Animancer
 
         /// <inheritdoc/>
         public override Transition<LinearMixerState> Clone(CloneContext context)
-        {
-            var clone = new LinearMixerTransition();
-            clone.CopyFrom(this, context);
-            return clone;
-        }
+            => new LinearMixerTransition();
 
         /// <inheritdoc/>
         public sealed override void CopyFrom(MixerTransition<LinearMixerState, float> copyFrom, CloneContext context)
@@ -161,6 +154,12 @@ namespace Animancer
         public virtual void CopyFrom(LinearMixerTransition copyFrom, CloneContext context)
         {
             base.CopyFrom(copyFrom, context);
+
+            if (copyFrom == null)
+            {
+                _ExtrapolateSpeed = true;
+                return;
+            }
 
             _ExtrapolateSpeed = copyFrom._ExtrapolateSpeed;
             _ParameterName = copyFrom._ParameterName;

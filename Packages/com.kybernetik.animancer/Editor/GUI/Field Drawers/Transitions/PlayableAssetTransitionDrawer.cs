@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 #if UNITY_EDITOR && UNITY_IMGUI
 
@@ -15,9 +15,6 @@ namespace Animancer.Editor
     /// <inheritdoc/>
     /// https://kybernetik.com.au/animancer/api/Animancer.Editor/PlayableAssetTransitionDrawer
     [CustomPropertyDrawer(typeof(PlayableAssetTransition), true)]
-#if !UNITY_EDITOR
-    [System.Obsolete(Validate.ProOnlyMessage)]
-#endif
     public class PlayableAssetTransitionDrawer : TransitionDrawer
     {
         /************************************************************************************************************************/

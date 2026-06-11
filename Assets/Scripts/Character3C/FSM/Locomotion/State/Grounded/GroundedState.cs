@@ -6,15 +6,19 @@ public class GroundedState : LocomotionStateBase, IAnimationEventReceiver
 
     private readonly StateMachine<GroundedStateId> _subStateMachine = new();
 
-    public GroundedState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context) : base(id, stateMachine, context)
+    private ICharacterAnimationDriver _animation;
+
+    public GroundedState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context, ICharacterAnimationDriver animation) : base(id, stateMachine, context, animation)
     {
-        _subStateMachine.AddState(new IdleSubState(Context, _groundedContext, ChangeGroundedSubState));
-        _subStateMachine.AddState(new WalkSubState(Context, _groundedContext, ChangeGroundedSubState));
-        _subStateMachine.AddState(new RunSubState(Context, _groundedContext, ChangeGroundedSubState));
-        _subStateMachine.AddState(new SprintSubState(Context, _groundedContext, ChangeGroundedSubState));
-        _subStateMachine.AddState(new SprintImpulseSubState(Context, _groundedContext, ChangeGroundedSubState));
-        _subStateMachine.AddState(new DashSubState(Context, _groundedContext, ChangeGroundedSubState));
-        _subStateMachine.AddState(new MoveStopSubState(Context, _groundedContext, ChangeGroundedSubState));
+        _subStateMachine.AddState(new MoveSubState(GroundedStateId.Idle, Context, _groundedContext, ChangeGroundedSubState));
+        _subStateMachine.AddState(new MoveSubState(GroundedStateId.Walk, Context, _groundedContext, ChangeGroundedSubState));
+        _subStateMachine.AddState(new MoveSubState(GroundedStateId.Run, Context, _groundedContext, ChangeGroundedSubState));
+        _subStateMachine.AddState(new MoveSubState(GroundedStateId.Sprint, Context, _groundedContext, ChangeGroundedSubState));
+        _subStateMachine.AddState(new SprintImpulseSubState(Context, _groundedContext, ChangeGroundedSubState, animation));
+        _subStateMachine.AddState(new DashSubState(Context, _groundedContext, ChangeGroundedSubState, animation));
+        _subStateMachine.AddState(new MoveStopSubState(Context, _groundedContext, ChangeGroundedSubState, animation));
+
+        _animation = animation;
     }
 
     public override void Enter()
@@ -63,12 +67,6 @@ public class GroundedState : LocomotionStateBase, IAnimationEventReceiver
 
         TickDashHeldTime(deltaTime);
 
-        if (InputFrame.DashPressed)
-        {
-            ChangeGroundedSubState(GroundedStateId.Dash);
-            return;
-        }
-
         _subStateMachine.Tick(deltaTime);
     }
 
@@ -87,9 +85,27 @@ public class GroundedState : LocomotionStateBase, IAnimationEventReceiver
         if (changed)
         {
             _groundedContext.PreviousSubStateId = previousStateId;
+
+            if (IsMoveState(nextSubStateId))
+            {
+                _animation.Play(new AnimationCommand(
+                    CharacterAnimationKey.Move,
+                    false,
+                    false,
+                    0.2f,
+                    false));
+            }
         }
 
         return changed;
+    }
+
+    private bool IsMoveState(GroundedStateId nextSubStateId)
+    {
+        return nextSubStateId == GroundedStateId.Idle
+        || nextSubStateId == GroundedStateId.Walk
+        || nextSubStateId == GroundedStateId.Run
+        || nextSubStateId == GroundedStateId.Sprint;
     }
 
     private void TickDashHeldTime(float deltaTime)

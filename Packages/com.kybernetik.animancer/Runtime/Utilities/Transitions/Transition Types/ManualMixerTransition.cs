@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 
@@ -7,9 +7,6 @@ namespace Animancer
     /// <inheritdoc/>
     /// https://kybernetik.com.au/animancer/api/Animancer/ManualMixerTransition
     [Serializable]
-#if !UNITY_EDITOR
-    [System.Obsolete(Validate.ProOnlyMessage)]
-#endif
     public class ManualMixerTransition : ManualMixerTransition<ManualMixerState>,
         ICopyable<ManualMixerTransition>
     {
@@ -27,11 +24,7 @@ namespace Animancer
 
         /// <inheritdoc/>
         public override Transition<ManualMixerState> Clone(CloneContext context)
-        {
-            var clone = new ManualMixerTransition();
-            clone.CopyFrom(this, context);
-            return clone;
-        }
+            => new ManualMixerTransition();
 
         /// <inheritdoc/>
         public sealed override void CopyFrom(ManualMixerTransition<ManualMixerState> copyFrom, CloneContext context)

@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 using System.Collections.Generic;
@@ -6,10 +6,7 @@ using UnityEngine;
 
 namespace Animancer
 {
-    /// <summary>
-    /// A <see cref="ClipTransition"/> which gets its clip from a
-    /// <see cref="DirectionalSet{T}"/> of <see cref="AnimationClip"/>s.
-    /// </summary>
+    /// <summary>A <see cref="ClipTransition"/> which gets its clip from a <see cref="DirectionalAnimationSet"/>.</summary>
     /// 
     /// <remarks>
     /// <para></para>
@@ -38,14 +35,18 @@ namespace Animancer
         /************************************************************************************************************************/
 
         [SerializeField]
-        [Tooltip("The animations used to determine the " + nameof(Clip))]
-        private DirectionalSet<AnimationClip> _AnimationSet;
+        [Tooltip("The animations which used to determine the " + nameof(Clip))]
+        private DirectionalAnimationSet _AnimationSet;
 
         /// <summary>[<see cref="SerializeField"/>] 
-        /// The <see cref="DirectionalSet{T}"/> used to determine the <see cref="ClipTransition.Clip"/>.
+        /// The <see cref="DirectionalAnimationSet"/> used to determine the <see cref="ClipTransition.Clip"/>.
         /// </summary>
-        public ref DirectionalSet<AnimationClip> AnimationSet
+        public ref DirectionalAnimationSet AnimationSet
             => ref _AnimationSet;
+
+        /// <inheritdoc/>
+        public override UnityEngine.Object MainObject
+            => _AnimationSet;
 
         /// <summary>The name of the serialized backing field of <see cref="AnimationSet"/>.</summary>
         public const string AnimationSetField = nameof(_AnimationSet);
@@ -54,19 +55,19 @@ namespace Animancer
 
         /// <summary>Sets the <see cref="ClipTransition.Clip"/> from the <see cref="AnimationSet"/>.</summary>
         public void SetDirection(Vector2 direction)
-            => Clip = _AnimationSet.Get(direction);
+            => Clip = _AnimationSet.GetClip(direction);
 
         /// <summary>Sets the <see cref="ClipTransition.Clip"/> from the <see cref="AnimationSet"/>.</summary>
         public void SetDirection(int direction)
-            => Clip = _AnimationSet.Get(direction);
+            => Clip = _AnimationSet.GetClip(direction);
 
         /// <summary>Sets the <see cref="ClipTransition.Clip"/> from the <see cref="AnimationSet"/>.</summary>
-        public void SetDirection(Direction4 direction)
-            => SetDirection((int)direction);
+        public void SetDirection(DirectionalAnimationSet.Direction direction)
+            => Clip = _AnimationSet.GetClip(direction);
 
         /// <summary>Sets the <see cref="ClipTransition.Clip"/> from the <see cref="AnimationSet"/>.</summary>
-        public void SetDirection(Direction8 direction)
-            => SetDirection((int)direction);
+        public void SetDirection(DirectionalAnimationSet8.Direction direction)
+            => Clip = _AnimationSet.GetClip((int)direction);
 
         /************************************************************************************************************************/
 
@@ -80,17 +81,15 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <inheritdoc/>
-        public override Transition<ClipState> Clone(CloneContext context)
-        {
-            var clone = new DirectionalClipTransition();
-            clone.CopyFrom(this, context);
-            return clone;
-        }
-
-        /// <inheritdoc/>
         public virtual void CopyFrom(DirectionalClipTransition copyFrom, CloneContext context)
         {
             base.CopyFrom(copyFrom, context);
+
+            if (copyFrom == null)
+            {
+                _AnimationSet = default;
+                return;
+            }
 
             _AnimationSet = copyFrom._AnimationSet;
         }

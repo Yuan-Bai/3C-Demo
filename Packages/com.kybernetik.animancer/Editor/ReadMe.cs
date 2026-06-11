@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 // FlexiMotion // https://kybernetik.com.au/flexi-motion // Copyright 2023-2024 Kybernetik //
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value.
@@ -318,12 +318,10 @@ namespace Animancer.Editor
             _NewVersionAvailable = true;
 
             if (log)
-            {
-                Debug.Log($"<a href=\"{_LatestVersionChangeLogURL}\">{_LatestVersionName}</a> is now available." +
-                    $"\n• Change Log: <a href=\"{_LatestVersionChangeLogURL}\">{_LatestVersionChangeLogURL}</a>" +
+                Debug.Log($"{_LatestVersionName} is now available." +
+                    $"\n• Change Log: {_LatestVersionChangeLogURL}" +
                     $"\n• This check can be disabled in the Read Me asset's Inspector.",
                     this);
-            }
 
             Selection.activeObject = this;
 #endif

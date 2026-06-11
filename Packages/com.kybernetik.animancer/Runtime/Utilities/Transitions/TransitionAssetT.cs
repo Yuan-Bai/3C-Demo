@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 using System.Collections.Generic;
@@ -8,9 +8,9 @@ namespace Animancer
 {
     /// <inheritdoc/>
     /// https://kybernetik.com.au/animancer/api/Animancer/TransitionAsset_1
-    [AnimancerHelpUrl(typeof(TransitionAsset<ITransition>))]
+    [AnimancerHelpUrl(typeof(TransitionAsset<ITransitionDetailed>))]
     public class TransitionAsset<TTransition> : TransitionAssetBase
-        where TTransition : ITransition
+        where TTransition : ITransitionDetailed
     {
         /************************************************************************************************************************/
 
@@ -39,7 +39,7 @@ namespace Animancer
         }
 
         /// <summary>Returns the <see cref="ITransition"/> wrapped by this <see cref="ScriptableObject"/>.</summary>
-        public override ITransition GetTransition()
+        public override ITransitionDetailed GetTransition()
         {
             AssertTransition();
             return _Transition;

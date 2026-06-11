@@ -1,8 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
-
-#if ! UNITY_EDITOR
-#pragma warning disable CS0618 // Type or member is obsolete (for TransitionLibraries in Animancer Lite).
-#endif
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using Animancer.TransitionLibraries;
 using System;
@@ -67,7 +63,7 @@ namespace Animancer
                 if (IsGraphInitialized)
                 {
                     _Graph.DestroyOutput();
-                    _Graph.Initialize(this);
+                    _Graph.CreateOutput(value, this);
                 }
             }
         }
@@ -211,8 +207,8 @@ namespace Animancer
             Continue,
 
             /// <summary>
-            /// Stop all animations, rewind them, and force the object back into its original state
-            /// (often called the bind pose).
+            /// Stop all animations, rewind them, and force the object back into its original state (often called the
+            /// bind pose).
             /// </summary>
             /// <remarks>
             /// The <see cref="AnimancerComponent"/> must be either above the <see cref="UnityEngine.Animator"/> in
@@ -235,11 +231,11 @@ namespace Animancer
         #region Update Mode
         /************************************************************************************************************************/
 
-        /// <summary>Determines when animations are updated and which time source is used.</summary>
-        /// <remarks>
-        /// Note that changing to or from <see cref="AnimatorUpdateMode.AnimatePhysics"/>
-        /// at runtime has no effect due to limitations in the Playables API.
-        /// </remarks>
+        /// <summary>
+        /// Determines when animations are updated and which time source is used. This property is mainly a wrapper
+        /// around the <see cref="Animator.updateMode"/>.
+        /// </summary>
+        /// <remarks>Note that changing to or from <see cref="AnimatorUpdateMode.AnimatePhysics"/> at runtime has no effect.</remarks>
         /// <exception cref="NullReferenceException">No <see cref="Animator"/> is assigned.</exception>
         public AnimatorUpdateMode UpdateMode
         {
@@ -380,7 +376,7 @@ namespace Animancer
 
             AnimancerGraph.SetNextGraphName(name + " (Animancer)");
             _Graph = new(_Transitions?.Library);
-            _Graph.Initialize(this);
+            _Graph.CreateOutput(_Animator, this);
             OnInitializeGraph();
         }
 
@@ -391,7 +387,7 @@ namespace Animancer
         /// The <see cref="AnimancerGraph"/> is already initialized.
         /// You must call <see cref="AnimancerGraph.Destroy"/> before re-initializing it.
         /// </exception>
-        public void InitializeGraph(AnimancerGraph graph, bool createOutput = true)
+        public void InitializePlayable(AnimancerGraph graph)
         {
             if (IsGraphInitialized)
                 throw new InvalidOperationException(
@@ -404,7 +400,7 @@ namespace Animancer
 
             _Graph = graph;
             _Graph.Transitions = _Transitions?.Library;
-            _Graph.Initialize(this, createOutput);
+            _Graph.CreateOutput(_Animator, this);
             OnInitializeGraph();
         }
 
@@ -470,8 +466,7 @@ namespace Animancer
                     OptionalWarning.NativeControllerHumanoid.Log(
                         $"An Animator Controller is assigned to the {nameof(Animator)} component" +
                         $" but the Rig is Humanoid so it can't be blended with Animancer." +
-                        $" See the documentation for more information:" +
-                        $" {Strings.DocsURLs.AnimatorControllersNative.AsHtmlLink()}",
+                        $" See the documentation for more information: {Strings.DocsURLs.AnimatorControllersNative}",
                         this);
             }
         }
@@ -647,7 +642,8 @@ namespace Animancer
         /// <para></para>
         /// This method is safe to call repeatedly without checking whether the animation was already playing.
         /// </remarks>
-        public AnimancerState TryPlay(IHasKey hasKey)
+        public AnimancerState TryPlay(
+            IHasKey hasKey)
             => TryPlay(hasKey.Key);
 
         /// <summary>
@@ -774,8 +770,8 @@ namespace Animancer
             => Graph.Evaluate();
 
         /// <summary>
-        /// Advances time by the specified value (in seconds)
-        /// and immediately applies the current states of all animations to the animated objects.
+        /// Advances time by the specified value (in seconds) and immediately applies the current states of all
+        /// animations to the animated objects.
         /// </summary>
         public void Evaluate(float deltaTime)
             => Graph.Evaluate(deltaTime);
@@ -845,27 +841,19 @@ namespace Animancer
             GatherAnimationClips(set);
 
             clips.Clear();
-
-            foreach (var clip in set)
-                if (clip != null)
-                    clips.Add(clip);
-
+            clips.AddRange(set);
             SetPool.Release(set);
         }
 
         /************************************************************************************************************************/
 
         /// <summary>[<see cref="IAnimationClipCollection"/>]
-        /// Gathers all the animations in the <see cref="Transitions"/> and <see cref="Graph"/>.
-        /// </summary>
-        /// <remarks>
+        /// Gathers all the animations in the <see cref="Graph"/>.
+        /// <para></para>
         /// In the Unity Editor this method also gathers animations from other components on parent and child objects.
-        /// </remarks>
+        /// </summary>
         public virtual void GatherAnimationClips(ICollection<AnimationClip> clips)
         {
-            if (_Transitions != null)
-                _Transitions.GatherAnimationClips(clips);
-
             if (IsGraphInitialized)
                 _Graph.GatherAnimationClips(clips);
 

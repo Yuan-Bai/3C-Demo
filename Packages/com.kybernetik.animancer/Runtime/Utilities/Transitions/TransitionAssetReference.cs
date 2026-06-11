@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 using System.Collections.Generic;
@@ -19,10 +19,9 @@ namespace Animancer
     [Serializable]
     public class TransitionAssetReference :
         IAnimationClipSource,
-        ICloneable<TransitionAssetReference>,
         ICopyable<TransitionAssetReference>,
         IPolymorphic,
-        ITransition,
+        ITransitionDetailed,
         IWrapper
     {
         /************************************************************************************************************************/
@@ -48,88 +47,47 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <inheritdoc/>
-        object IWrapper.WrappedObject
-            => _Asset;
+        object IWrapper.WrappedObject => _Asset;
 
         /************************************************************************************************************************/
 
         /// <summary>Can this transition create a valid <see cref="AnimancerState"/>?</summary>
-        public virtual bool IsValid
-            => _Asset.IsValid();
+        public virtual bool IsValid => _Asset.IsValid();
 
         /// <inheritdoc/>
-        public virtual float FadeDuration
-            => _Asset != null
-            ? _Asset.FadeDuration
-            : 0;
+        public virtual float FadeDuration => _Asset.FadeDuration;
 
         /// <inheritdoc/>
-        public virtual object Key
-            => _Asset != null
-            ? _Asset.Key
-            : null;
+        public virtual object Key => _Asset.Key;
 
         /// <inheritdoc/>
-        public virtual FadeMode FadeMode
-            => _Asset != null
-            ? _Asset.FadeMode
-            : default;
+        public virtual FadeMode FadeMode => _Asset.FadeMode;
 
         /// <inheritdoc/>
-        public bool IsLooping
-            => _Asset != null
-            && _Asset.IsLooping;
+        public bool IsLooping => _Asset.IsLooping;
 
         /// <inheritdoc/>
         public float NormalizedStartTime
         {
-            get => _Asset != null
-                ? _Asset.NormalizedStartTime
-                : float.NaN;
-            set => _Asset.NormalizedStartTime = value;// No null check. Don't silently ignore commands.
+            get => _Asset.NormalizedStartTime;
+            set => _Asset.NormalizedStartTime = value;
         }
 
         /// <inheritdoc/>
-        public float MaximumLength
-            => _Asset != null
-            ? _Asset.MaximumLength
-            : 0;
+        public float MaximumDuration => _Asset.MaximumDuration;
 
         /// <inheritdoc/>
         public float Speed
         {
-            get => _Asset != null
-                ? _Asset.Speed
-                : 1;
-            set => _Asset.Speed = value;// No null check. Don't silently ignore commands.
+            get => _Asset.Speed;
+            set => _Asset.Speed = value;
         }
 
-        /************************************************************************************************************************/
+        /// <inheritdoc/>
+        public virtual AnimancerState CreateState() => _Asset.CreateState();
 
         /// <inheritdoc/>
-        [Obsolete(TransitionAssetBase.ObsoleteEventsMessage)]
-        public AnimancerEvent.Sequence Events
-            => _Asset != null
-            ? _Asset.Events
-            : null;
-
-        /// <inheritdoc/>
-        [Obsolete(TransitionAssetBase.ObsoleteEventsMessage)]
-        public AnimancerEvent.Sequence.Serializable SerializedEvents
-        {
-            get => _Asset.SerializedEvents;
-            set => _Asset.SerializedEvents = value;
-        }
-
-        /************************************************************************************************************************/
-
-        /// <inheritdoc/>
-        public virtual AnimancerState CreateState()
-            => _Asset.CreateState();
-
-        /// <inheritdoc/>
-        public virtual void Apply(AnimancerState state)
-            => _Asset.Apply(state);
+        public virtual void Apply(AnimancerState state) => _Asset.Apply(state);
 
         /************************************************************************************************************************/
 
@@ -142,17 +100,15 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <inheritdoc/>
-        public virtual TransitionAssetReference Clone(CloneContext context)
-        {
-            var clone = new TransitionAssetReference();
-            clone.CopyFrom(this, context);
-            return clone;
-        }
-
-        /// <inheritdoc/>
         public void CopyFrom(TransitionAssetReference copyFrom, CloneContext context)
         {
-            _Asset = context.GetCloneOrOriginal(copyFrom._Asset);
+            if (copyFrom == null)
+            {
+                _Asset = default;
+                return;
+            }
+
+            _Asset = copyFrom._Asset;
         }
 
         /************************************************************************************************************************/

@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value.
 
@@ -48,19 +48,8 @@ namespace Animancer.Editor
         /// <item>[25] = v7.4.2: 2023-01-31.</item>
         /// <item>[26] = v7.4.3: 2023-04-16.</item>
         /// <item>[27] = v8.0.0: 2024-08-17.</item>
-        /// <item>[28] = v8.0.1: 2024-09-08.</item>
-        /// <item>[29] = v8.0.2: 2024-11-02.</item>
-        /// <item>[30] = v8.1.0: 2025-02-26.</item>
-        /// <item>[31] = v8.1.1: 2025-05-26.</item>
-        /// <item>[32] = v8.2.0: 2025-09-17.</item>
-        /// <item>[33] = v8.2.1: 2025-09-18.</item>
-        /// <item>[34] = v8.2.2: 2025-09-27.</item>
-        /// <item>[35] = v8.2.3: 2025-10-12.</item>
-        /// <item>[36] = v8.3.0: 2026-03-28.</item>
-        /// <item>[37] = v8.3.1: 2026-04-06.</item>
-        /// <item>[38] = v8.3.2: 2026-05-17.</item>
         /// </list></example>
-        public override int ReleaseNumber => 38;
+        public override int ReleaseNumber => 27;
 
         /// <inheritdoc/>
         public override string VersionName => Strings.DocsURLs.VersionName;
@@ -72,7 +61,7 @@ namespace Animancer.Editor
         public override string BaseProductName => Strings.ProductName;
 
         /// <inheritdoc/>
-        public override string ProductName => Strings.ProductName + " Lite";
+        public override string ProductName => Strings.ProductName + " Pro";
 
         /// <inheritdoc/>
         public override string DocumentationURL => Strings.DocsURLs.Documentation;
@@ -135,89 +124,6 @@ namespace Animancer.Editor
             /************************************************************************************************************************/
         }
     }
-
-    /************************************************************************************************************************/
-    #region UnityVersionChecker
-    // This class isn't in its own file because files don't get removed when upgrading from Animancer Lite to Pro.
-    /************************************************************************************************************************/
-
-    /// <summary>[Editor-Only] [Lite-Only]
-    /// Validates that the Animancer.Lite.dll is the correct one for this version of Unity.
-    /// </summary>
-    [UnityEditor.InitializeOnLoad]
-    internal static class UnityVersionChecker
-    {
-        /************************************************************************************************************************/
-        
-        private const string ExpectedAssemblyTarget =
-#if UNITY_6000_0_OR_NEWER
-            "6000.0";
-#elif UNITY_2023_1_OR_NEWER
-            "2023.1";
-#else
-            "2022.3";
-#endif
-
-        /************************************************************************************************************************/
-
-        static UnityVersionChecker()
-            => UnityEditor.EditorApplication.delayCall += Execute;
-
-        private static void Execute()
-        {
-            var assembly = typeof(AnimancerEditorUtilities).Assembly;
-            var attributes = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyDescriptionAttribute), false);
-            if (attributes.Length != 1)
-            {
-                Debug.LogWarning($"{assembly.FullName} has {attributes.Length} [AssemblyDescription] attributes.");
-                return;
-            }
-
-            var attribute = (System.Reflection.AssemblyDescriptionAttribute)attributes[0];
-            if (attribute.Description.EndsWith($"Unity {ExpectedAssemblyTarget}+."))
-                return;
-
-            var actualAssemblyTarget = attribute.Description.Substring(attribute.Description.Length - 14, 13);
-            if (!actualAssemblyTarget.StartsWith("Unity "))
-                actualAssemblyTarget = "[Unknown]";
-
-            var message = $"{assembly.GetName().Name}.dll was compiled for {actualAssemblyTarget}" +
-                $" but the correct target for this version of Unity would be {ExpectedAssemblyTarget}+." +
-                $"\n\nYou should use the Package Manager to Remove this version then" +
-                $" Re-Download and Re-Import the appropriate version." +
-                $" It can also be downloded from {Strings.DocsURLs.DownloadLite}" +
-                $"\n\nOr you could ignore this warning which may prevent some features from working properly." +
-                $" This option will log a message which you can use to find and delete the script showing this warning.";
-
-            var choice = UnityEditor.EditorUtility.DisplayDialogComplex($"{assembly.GetName().Name}.dll Version Mismatch",
-                message,
-                "Open Package Manager",
-                "Ignore Warning",
-                "Open Download Page");
-
-            switch (choice)
-            {
-                case 0:
-                    UnityEditor.PackageManager.UI.Window.Open("Animancer Lite");
-                    break;
-
-                case 1:
-                    // If you just want to disable this message, comment out the [InitializeOnLoad] attribute on this class.
-                    Debug.LogWarning($"{message}\n");
-                    break;
-
-                case 2:
-                    Application.OpenURL(Strings.DocsURLs.DownloadLite);
-                    break;
-            }
-        }
-
-        /************************************************************************************************************************/
-    }
-
-    /************************************************************************************************************************/
-#endregion
-    /************************************************************************************************************************/
 }
 
 #endif

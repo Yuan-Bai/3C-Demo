@@ -1,7 +1,7 @@
 
 public class ClimbingState : LocomotionStateBase
 {
-    public ClimbingState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context) : base(id, stateMachine, context)
+    public ClimbingState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context, ICharacterAnimationDriver animation) : base(id, stateMachine, context, animation)
     {
     }
 }

@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using Animancer.Units;
 using System;
@@ -12,9 +12,6 @@ namespace Animancer
     /// <inheritdoc/>
     /// https://kybernetik.com.au/animancer/api/Animancer/PlayableAssetTransition
     [Serializable]
-#if ! UNITY_EDITOR
-    [System.Obsolete(Validate.ProOnlyMessage)]
-#endif
     public class PlayableAssetTransition : Transition<PlayableAssetState>,
         IAnimationClipCollection,
         ICopyable<PlayableAssetTransition>
@@ -25,22 +22,7 @@ namespace Animancer
         private PlayableAsset _Asset;
 
         /// <summary>[<see cref="SerializeField"/>] The asset to play.</summary>
-        /// <remarks>
-        /// If you set this property and this transition has been played on multiple characters,
-        /// you will need to call <see cref="Transition{T}.ReconcileMainObject(AnimancerGraph)"/>
-        /// for each of them to create new states for the newly assigned object.
-        /// </remarks>
-        public PlayableAsset Asset
-        {
-            get => _Asset;
-            set
-            {
-                _Asset = value;
-
-                if (BaseState != null)
-                    ReconcileMainObject(BaseState);
-            }
-        }
+        public ref PlayableAsset Asset => ref _Asset;
 
         /// <summary>The name of the serialized backing field of <see cref="Asset"/>.</summary>
         public const string AssetField = nameof(_Asset);
@@ -81,18 +63,14 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <inheritdoc/>
-        public override float MaximumLength
+        public override float MaximumDuration
             => _Asset != null
             ? (float)_Asset.duration
             : 0;
 
         /// <inheritdoc/>
         public override bool IsValid
-#if UNITY_EDITOR
             => _Asset != null;
-#else
-            => false;
-#endif
 
         /************************************************************************************************************************/
 
@@ -109,8 +87,8 @@ namespace Animancer
         /// <inheritdoc/>
         public override void Apply(AnimancerState state)
         {
-            base.Apply(state);
             ApplyNormalizedStartTime(state, _NormalizedStartTime);
+            base.Apply(state);
         }
 
         /************************************************************************************************************************/
@@ -123,11 +101,7 @@ namespace Animancer
 
         /// <inheritdoc/>
         public override Transition<PlayableAssetState> Clone(CloneContext context)
-        {
-            var clone = new PlayableAssetTransition();
-            clone.CopyFrom(this, context);
-            return clone;
-        }
+            => new PlayableAssetTransition();
 
         /// <inheritdoc/>
         public sealed override void CopyFrom(Transition<PlayableAssetState> copyFrom, CloneContext context)
@@ -138,9 +112,17 @@ namespace Animancer
         {
             base.CopyFrom(copyFrom, context);
 
-            _Asset = context.GetCloneOrOriginal(copyFrom._Asset);
+            if (copyFrom == null)
+            {
+                _Asset = default;
+                _NormalizedStartTime = float.NaN;
+                _Bindings = default;
+                return;
+            }
+
+            _Asset = copyFrom._Asset;
             _NormalizedStartTime = copyFrom._NormalizedStartTime;
-            context.CloneArray(copyFrom._Bindings, ref _Bindings);
+            AnimancerUtilities.CopyExactArray(copyFrom._Bindings, ref _Bindings);
         }
 
         /************************************************************************************************************************/
@@ -149,28 +131,14 @@ namespace Animancer
         /// Returns a new <see cref="PlayableAssetTransition"/>
         /// if the `target` is an <see cref="PlayableAsset"/>.
         /// </summary>
-        [TryCreateTransition(typeof(PlayableAsset))]
-        public static ITransition TryCreateTransition(Object target)
+        [TryCreateTransition]
+        public static ITransitionDetailed TryCreateTransition(Object target)
             => target is not PlayableAsset asset
             ? null
             : new PlayableAssetTransition()
             {
                 Asset = asset,
             };
-
-        /************************************************************************************************************************/
-
-#if UNITY_EDITOR
-        /// <summary>[Editor-Only] Validates that the `command` is targeting an asset.</summary>
-        [UnityEditor.MenuItem("CONTEXT/" + nameof(PlayableAsset) + "/Create Transition Asset", validate = true)]
-        private static bool ValidateCreateTransitionAsset(UnityEditor.MenuCommand command)
-            => TryCreateTransitionAttribute.CanCreateAndSave(command.context);
-
-        /// <summary>[Editor-Only] Tries to create an asset containing an appropriate transition for the `command`.</summary>
-        [UnityEditor.MenuItem("CONTEXT/" + nameof(PlayableAsset) + "/Create Transition Asset")]
-        private static void CreateTransitionAsset(UnityEditor.MenuCommand command)
-            => TryCreateTransitionAttribute.TryCreateTransitionAsset(command.context, true);
-#endif
 
         /************************************************************************************************************************/
     }

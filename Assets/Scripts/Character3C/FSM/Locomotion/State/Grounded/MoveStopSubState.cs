@@ -1,6 +1,9 @@
 
 
 
+
+using UnityEngine;
+
 public class MoveStopSubState : IState<GroundedStateId>, IAnimationEventReceiver
 {
     public GroundedStateId Id => GroundedStateId.MoveStop;
@@ -8,22 +11,27 @@ public class MoveStopSubState : IState<GroundedStateId>, IAnimationEventReceiver
     private LocomotionContext _context;
     private GroundedStateContext _groundedContext;
     private ChangeSubState ChangeSubState;
+    private ICharacterAnimationDriver _animation;
 
-    public MoveStopSubState(LocomotionContext context, GroundedStateContext groundedContext, ChangeSubState changeSubState)
+    public MoveStopSubState(LocomotionContext context, GroundedStateContext groundedContext, ChangeSubState changeSubState, ICharacterAnimationDriver animation)
     {
         _context = context;
         _groundedContext = groundedContext;
         ChangeSubState = changeSubState;
+        _animation = animation;
     }
 
     public void Enter()
     {
         _context.GroundedStateId = GroundedStateId.MoveStop;
         _context.GroundedActionElapsedTime = 0.0f;
+        _context.UseRootMotion = true;
+        _animation.Play(new AnimationCommand(CharacterAnimationKey.StopRunL, true, true, 0.2f, false));
     }
 
     public void Exit()
     {
+        _context.UseRootMotion = false;
     }
 
     public void Tick(float deltaTime)

@@ -4,7 +4,7 @@ public class AirborneState : LocomotionStateBase
     private const float JumpDuration = 0.18f;
     private const float JumpSecondDuration = 0.18f;
 
-    public AirborneState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context) : base(id, stateMachine, context)
+    public AirborneState(LocomotionStateId id, StateMachine<LocomotionStateId> stateMachine, LocomotionContext context, ICharacterAnimationDriver animation) : base(id, stateMachine, context, animation)
     {
     }
 

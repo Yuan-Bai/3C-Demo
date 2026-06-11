@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using Animancer.Units;
 using System;
@@ -10,9 +10,6 @@ namespace Animancer
 {
     /// <inheritdoc/>
     /// https://kybernetik.com.au/animancer/api/Animancer/ManualMixerTransition_1
-#if !UNITY_EDITOR
-    [System.Obsolete(Validate.ProOnlyMessage)]
-#endif
     [Serializable]
     public abstract class ManualMixerTransition<TMixer> : Transition<TMixer>,
         IMotion,
@@ -69,7 +66,7 @@ namespace Animancer
 
         /************************************************************************************************************************/
 
-        /// <summary>[<see cref="ITransition"/>] Are any of the <see cref="Animations"/> looping?</summary>
+        /// <summary>[<see cref="ITransitionDetailed"/>] Are any of the <see cref="Animations"/> looping?</summary>
         public override bool IsLooping
         {
             get
@@ -89,7 +86,7 @@ namespace Animancer
         }
 
         /// <inheritdoc/>
-        public override float MaximumLength
+        public override float MaximumDuration
         {
             get
             {
@@ -186,11 +183,7 @@ namespace Animancer
                     if (_Animations[i] == null)
                         return false;
 
-#if UNITY_EDITOR
                 return true;
-#else
-                return false;
-#endif
             }
         }
 
@@ -259,6 +252,14 @@ namespace Animancer
         public virtual void CopyFrom(ManualMixerTransition<TMixer> copyFrom, CloneContext context)
         {
             base.CopyFrom(copyFrom, context);
+
+            if (copyFrom == null)
+            {
+                _Animations = default;
+                _Speeds = default;
+                _SynchronizeChildren = default;
+                return;
+            }
 
             AnimancerUtilities.CopyExactArray(copyFrom._Animations, ref _Animations);
             AnimancerUtilities.CopyExactArray(copyFrom._Speeds, ref _Speeds);

@@ -8,12 +8,14 @@ public class DashSubState : IState<GroundedStateId>, IAnimationEventReceiver
     private LocomotionContext _context;
     private GroundedStateContext _groundedContext;
     private ChangeSubState ChangeSubState;
+    private ICharacterAnimationDriver _animation;
 
-    public DashSubState(LocomotionContext context, GroundedStateContext groundedContext, ChangeSubState changeSubState)
+    public DashSubState(LocomotionContext context, GroundedStateContext groundedContext, ChangeSubState changeSubState, ICharacterAnimationDriver animation)
     {
         _context = context;
         _groundedContext = groundedContext;
         ChangeSubState = changeSubState;
+        _animation = animation;
     }
 
     public void Enter()
@@ -21,10 +23,13 @@ public class DashSubState : IState<GroundedStateId>, IAnimationEventReceiver
         _context.GroundedStateId = GroundedStateId.Dash;
         _context.GroundedActionElapsedTime = 0.0f;
         _groundedContext.DashHeldTime = 0.0f;
+        _context.UseRootMotion = true;
+        _animation.Play(new AnimationCommand(CharacterAnimationKey.DashF, true, true, 0.2f, false));
     }
 
     public void Exit()
     {
+        _context.UseRootMotion = false;
     }
 
     public void Tick(float deltaTime)
@@ -34,10 +39,6 @@ public class DashSubState : IState<GroundedStateId>, IAnimationEventReceiver
 
     public void OnAnimationEnded(CharacterAnimationKey key)
     {
-        if (key != CharacterAnimationKey.DashF && key != CharacterAnimationKey.DashB)
-        {
-            return;
-        }
 
         if (_context.HasMoveInput)
         {

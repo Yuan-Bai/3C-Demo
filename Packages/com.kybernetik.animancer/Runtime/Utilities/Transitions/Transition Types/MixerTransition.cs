@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value.
 
@@ -10,9 +10,6 @@ namespace Animancer
     /// <inheritdoc/>
     /// https://kybernetik.com.au/animancer/api/Animancer/MixerTransition_2
     [Serializable]
-#if ! UNITY_EDITOR
-    [System.Obsolete(Validate.ProOnlyMessage)]
-#endif
     public abstract class MixerTransition<TMixer, TParameter> : ManualMixerTransition<TMixer>,
         ICopyable<MixerTransition<TMixer, TParameter>>
         where TMixer : MixerState<TParameter>
@@ -66,6 +63,13 @@ namespace Animancer
         public virtual void CopyFrom(MixerTransition<TMixer, TParameter> copyFrom, CloneContext context)
         {
             base.CopyFrom(copyFrom, context);
+
+            if (copyFrom == null)
+            {
+                _DefaultParameter = default;
+                _Thresholds = default;
+                return;
+            }
 
             _DefaultParameter = copyFrom._DefaultParameter;
             AnimancerUtilities.CopyExactArray(copyFrom._Thresholds, ref _Thresholds);

@@ -19,4 +19,9 @@ public class LocomotionContext
     public AirbornePhase AirbornePhase;
     public AirborneActionId AirborneAction;
     public float AirborneActionElapsedTime;
+
+    // 动画驱动位移所需
+    public bool UseRootMotion;
+    public Vector3 DeltaPosition;
+    public Quaternion DeltaRotation;
 }

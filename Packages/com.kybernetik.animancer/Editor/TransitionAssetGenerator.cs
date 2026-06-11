@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 #if UNITY_EDITOR
 
@@ -72,7 +72,7 @@ namespace Animancer.Editor
 
                 GetDetailsFromState(
                     originalAsset as AnimatorState,
-                    asset.Transition);
+                    asset.Transition as ITransitionDetailed);
                 SaveTransition(originalAsset, asset);
                 return asset;
             }
@@ -86,7 +86,7 @@ namespace Animancer.Editor
         /************************************************************************************************************************/
 
         /// <summary>Initializes the `transition` based on the `state`.</summary>
-        public static void GetDetailsFromState(AnimatorState state, ITransition transition)
+        public static void GetDetailsFromState(AnimatorState state, ITransitionDetailed transition)
         {
             if (state == null ||
                 transition == null)
@@ -137,7 +137,7 @@ namespace Animancer.Editor
             if (state != null)
                 asset.name = state.name;
 
-            AnimancerUtilities.TryGetWrappedObject(asset, out ITransition detailed);
+            AnimancerUtilities.TryGetWrappedObject(asset, out ITransitionDetailed detailed);
             GetDetailsFromState(state, detailed);
             SaveTransition(blendTree, asset);
             return asset;

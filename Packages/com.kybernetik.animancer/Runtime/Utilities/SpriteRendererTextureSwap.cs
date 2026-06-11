@@ -1,4 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value.
 
@@ -32,8 +32,7 @@ namespace Animancer
         private SpriteRenderer _Renderer;
 
         /// <summary>The <see cref="SpriteRenderer"/> that will have its <see cref="Sprite"/> modified.</summary>
-        public ref SpriteRenderer Renderer
-            => ref _Renderer;
+        public ref SpriteRenderer Renderer => ref _Renderer;
 
         /************************************************************************************************************************/
 
@@ -105,8 +104,7 @@ namespace Animancer
 
         private Dictionary<Sprite, Sprite> _SpriteMap;
 
-        private void RefreshSpriteMap()
-            => _SpriteMap = GetSpriteMap(_Texture);
+        private void RefreshSpriteMap() => _SpriteMap = GetSpriteMap(_Texture);
 
         /************************************************************************************************************************/
 
@@ -135,8 +133,7 @@ namespace Animancer
 
         /************************************************************************************************************************/
 
-        protected virtual void Awake()
-            => RefreshSpriteMap();
+        protected virtual void Awake() => RefreshSpriteMap();
 
         /************************************************************************************************************************/
 
@@ -155,7 +152,9 @@ namespace Animancer
 
         /// <summary>Destroys all sprites created for the current <see cref="Texture"/>.</summary>
         public void ClearCache()
-            => DestroySprites(_SpriteMap);
+        {
+            DestroySprites(_SpriteMap);
+        }
 
         /************************************************************************************************************************/
 
@@ -179,8 +178,8 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <summary>
-        /// If the <see cref="Sprite.texture"/> is not already using the specified `texture`,
-        /// this method replaces the `sprite` with a cached duplicate which uses that `texture` instead.
+        /// If the <see cref="Sprite.texture"/> is not already using the specified `texture`, this method replaces the
+        /// `sprite` with a cached duplicate which uses that `texture` instead.
         /// </summary>
         public static bool TrySwapTexture(
             Dictionary<Sprite, Sprite> spriteMap,
@@ -202,16 +201,9 @@ namespace Animancer
 
                 secondaryTextures ??= GetSecondaryTexturesCached(sprite);
 
-                otherSprite = Sprite.Create(
-                    texture,
-                    sprite.rect,
-                    pivot,
-                    sprite.pixelsPerUnit,
-                    0,
-                    SpriteMeshType.FullRect,
-                    sprite.border,
-                    false,
-                    secondaryTextures);
+                otherSprite = Sprite.Create(texture,
+                    sprite.rect, pivot, sprite.pixelsPerUnit,
+                    0, SpriteMeshType.FullRect, sprite.border, false, secondaryTextures);
 
 #if UNITY_ASSERTIONS
                 var name = sprite.name;
@@ -243,10 +235,7 @@ namespace Animancer
 
         private static List<SecondarySpriteTexture[]> _SecondaryTextureCache;
 
-        /// <summary>
-        /// A wrapper around <see cref="Sprite.GetSecondaryTextures"/>
-        /// which reuses arrays of the same size.
-        /// </summary>
+        /// <summary>A wrapper around <see cref="Sprite.GetSecondaryTextures"/> which reuses arrays of the same size.</summary>
         public static SecondarySpriteTexture[] GetSecondaryTexturesCached(Sprite sprite)
         {
             var count = sprite.GetSecondaryTextureCount();
@@ -300,8 +289,11 @@ namespace Animancer
         /// <summary>Destroys all sprites created for the `texture`.</summary>
         public static void DestroySprites(Texture2D texture)
         {
-            if (TextureToSpriteMap.Remove(texture, out var spriteMap))
+            if (TextureToSpriteMap.TryGetValue(texture, out var spriteMap))
+            {
+                TextureToSpriteMap.Remove(texture);
                 DestroySprites(spriteMap);
+            }
         }
 
         /************************************************************************************************************************/

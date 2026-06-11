@@ -2,10 +2,7 @@ public enum CharacterAnimationKey
 {
     None,
 
-    Idle,
-    Walk,
-    Run,
-    Sprint,
+    Move,
 
     DashF,
     DashB,

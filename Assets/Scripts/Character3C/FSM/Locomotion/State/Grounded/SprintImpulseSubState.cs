@@ -10,18 +10,22 @@ public class SprintImpulseSubState : IState<GroundedStateId>, IAnimationEventRec
     private LocomotionContext _context;
     private GroundedStateContext _groundedContext;
     private ChangeSubState ChangeSubState;
+    private ICharacterAnimationDriver _animation;
 
-    public SprintImpulseSubState(LocomotionContext context, GroundedStateContext groundedContext, ChangeSubState changeSubState)
+    public SprintImpulseSubState(LocomotionContext context, GroundedStateContext groundedContext, ChangeSubState changeSubState, ICharacterAnimationDriver animation)
     {
         _context = context;
         _groundedContext = groundedContext;
         ChangeSubState = changeSubState;
+        _animation = animation;
     }
 
     public void Enter()
     {
+        
         _context.GroundedStateId = GroundedStateId.SprintImpulse;
         _context.GroundedActionElapsedTime = 0.0f;
+        _animation.Play(new AnimationCommand(CharacterAnimationKey.SprintImpulse, true, true, 0.2f, false));
     }
 
     public void Exit()

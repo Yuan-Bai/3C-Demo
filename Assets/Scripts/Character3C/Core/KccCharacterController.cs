@@ -7,7 +7,7 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
 {
     [SerializeField] private float _rotationSharpness = 12f;
     [SerializeField] private float _moveSpeedSharpness = 12f;
-    [SerializeField] private float _maxStableMoveSpeed = 5f;
+    [SerializeField] private float _maxStableMoveSpeed = 2f;
     [SerializeField] private float _jumpSpeed = 10f;
     [SerializeField] private float _secondJumpSpeed = 8f;
     [SerializeField] private float _gravity = 12f;
@@ -138,9 +138,17 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
             return;
         }
 
-        Quaternion targetRotation = Quaternion.LookRotation(_moveDirection.normalized, _motor.CharacterUp);
-        float blend = 1.0f - Mathf.Exp(-_rotationSharpness * deltaTime);
-        currentRotation = Quaternion.Slerp(currentRotation, targetRotation, blend);
+        if (!_locomotionContext.UseRootMotion)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(_moveDirection.normalized, _motor.CharacterUp);
+            float blend = 1.0f - Mathf.Exp(-_rotationSharpness * deltaTime);
+            currentRotation = Quaternion.Slerp(currentRotation, targetRotation, blend);
+        }
+        else
+        {
+            currentRotation = _locomotionContext.DeltaRotation * currentRotation;
+            _locomotionContext.DeltaRotation = Quaternion.identity;
+        }
     }
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
@@ -155,6 +163,13 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
             _lastAppliedAirborneAction = AirborneActionId.None;
         }
 
+        if (_locomotionContext.UseRootMotion)
+        {
+            currentVelocity = _locomotionContext.DeltaPosition / deltaTime;
+            _locomotionContext.DeltaPosition = Vector3.zero;
+            return;
+        }
+
         if (_motor.GroundingStatus.IsStableOnGround)
         {
             if (TryApplyAirborneActionImpulse(ref currentVelocity))
@@ -165,9 +180,9 @@ public class KccCharacterController : MonoBehaviour, ICharacterController
             float speedMultiplier = _locomotionContext.GroundedStateId switch
             {
                 GroundedStateId.Idle => 0f,
-                GroundedStateId.Walk => 0.5f,
+                GroundedStateId.Walk => 0.4f,
                 GroundedStateId.Run => 1f,
-                GroundedStateId.Sprint => 1.3f,
+                GroundedStateId.Sprint => 2f,
                 _ => 1f,
             };
             Vector3 targetVelocity = _moveDirection * _maxStableMoveSpeed * speedMultiplier;

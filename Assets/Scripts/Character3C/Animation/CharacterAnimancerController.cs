@@ -1,18 +1,17 @@
 using Animancer;
 using UnityEngine;
 
-public class CharacterAnimancerController : MonoBehaviour
+
+[RequireComponent(typeof(AnimancerComponent))]
+public class CharacterAnimancerController : MonoBehaviour, ICharacterAnimationDriver
 {
     [SerializeField] private AnimancerComponent _animancer;
-    [SerializeField] private bool _disableRootMotion = true;
+    // [SerializeField] private bool _disableRootMotion = true;
     [SerializeField] private bool _lockAnimatedRootToInitialLocalPose;
     [SerializeField] private Transform _animatedRoot;
 
-    [SerializeField] private ClipTransition _idle;
-    [SerializeField] private ClipTransition _walk;
-    [SerializeField] private ClipTransition _run;
-    [SerializeField] private ClipTransition _sprint;
-
+    [Header("Animation Asset")]
+    [SerializeField] private LinearMixerTransition _move;
     [SerializeField] private ClipTransition _dashF;
     [SerializeField] private ClipTransition _dashB;
     [SerializeField] private ClipTransition _sprintImpulse;
@@ -22,7 +21,6 @@ public class CharacterAnimancerController : MonoBehaviour
     [SerializeField] private ClipTransition _stopRunR;
     [SerializeField] private ClipTransition _stopSprintL;
     [SerializeField] private ClipTransition _stopSprintR;
-    
     [SerializeField] private ClipTransition _jumpWalkL;
     [SerializeField] private ClipTransition _jumpWalkR;
     [SerializeField] private ClipTransition _jumpRunL;
@@ -31,21 +29,21 @@ public class CharacterAnimancerController : MonoBehaviour
     [SerializeField] private ClipTransition _jumpSecondB;
     [SerializeField] private ClipTransition _fall;
 
+    [Header("Animation Parameter")]
+    [SerializeField] private StringAsset _speedParameter;
+
     private CharacterAnimationKey _currentKey;
     private AnimancerState _currentState;
     private Vector3 _initialAnimatedRootLocalPosition;
     private Quaternion _initialAnimatedRootLocalRotation;
+    private LocomotionContext _locomotionContext;
+    private SmoothedFloatParameter _speedSmoothedParameter;
 
     public event System.Action<CharacterAnimationKey> AnimationEnded;
 
     private void Awake()
     {
         _animancer ??= GetComponent<AnimancerComponent>();
-
-        if (_animancer != null && _animancer.Animator != null && _disableRootMotion)
-        {
-            _animancer.Animator.applyRootMotion = false;
-        }
 
         if (_animatedRoot == null && _animancer != null)
         {
@@ -59,80 +57,48 @@ public class CharacterAnimancerController : MonoBehaviour
         }
     }
 
-    private void LateUpdate()
+    private void Start()
     {
-        if (!_lockAnimatedRootToInitialLocalPose || _animatedRoot == null)
-        {
-            return;
-        }
-
-        _animatedRoot.localPosition = _initialAnimatedRootLocalPosition;
-        _animatedRoot.localRotation = _initialAnimatedRootLocalRotation;
+        _speedSmoothedParameter = new(_animancer, _speedParameter, 0.1f);
     }
 
-    public void UpdateAnimation(LocomotionStateId locomotionState, LocomotionContext context)
+    private void OnAnimatorMove()
     {
-        if (locomotionState == LocomotionStateId.Grounded)
+        if (_locomotionContext == null || !_locomotionContext.UseRootMotion)
         {
-            switch (context.GroundedStateId)
-            {
-                case GroundedStateId.Idle:
-                    PlayIfChanged(CharacterAnimationKey.Idle, _idle, false);
-                    break;
-
-                case GroundedStateId.Walk:
-                    PlayIfChanged(CharacterAnimationKey.Walk, _walk, false);
-                    break;
-
-                case GroundedStateId.Run:
-                    PlayIfChanged(CharacterAnimationKey.Run, _run, false);
-                    break;
-
-                case GroundedStateId.Sprint:
-                    PlayIfChanged(CharacterAnimationKey.Sprint, _sprint, false);
-                    break;
-
-                case GroundedStateId.Dash:
-                    PlayIfChanged(CharacterAnimationKey.DashF, _dashF, true);
-                    break;
-
-                case GroundedStateId.SprintImpulse:
-                    PlayIfChanged(CharacterAnimationKey.SprintImpulse, _sprintImpulse, true);
-                    break;
-
-                case GroundedStateId.MoveStop:
-                    PlayIfChanged(CharacterAnimationKey.StopRunL, _stopRunL, true);
-                    break;
-            }
-
             return;
         }
 
-        if (locomotionState == LocomotionStateId.Airborne)
+        _locomotionContext.DeltaPosition += _animancer.Animator.deltaPosition;
+        _locomotionContext.DeltaRotation = _animancer.Animator.deltaRotation * _locomotionContext.DeltaRotation;
+    }
+
+    public void SetLocomotionContext(LocomotionContext locomotionContext)
+    {
+        _locomotionContext = locomotionContext;
+    }
+
+    public void UpdateAnimation(LocomotionStateId locomotionState)
+    {
+        if (_locomotionContext.GroundedStateId == GroundedStateId.Dash
+        ||  _locomotionContext.GroundedStateId == GroundedStateId.SprintImpulse
+        ||  _locomotionContext.GroundedStateId == GroundedStateId.MoveStop)
         {
-            if (context.AirborneAction == AirborneActionId.Jump)
+            return;
+        }
+        if (_locomotionContext.IsStableOnGround)
+        {
+            if (_currentKey != CharacterAnimationKey.Move)
             {
-                PlayIfChanged(CharacterAnimationKey.JumpRunL, _jumpRunL, true);
-                return;
+                _currentKey = CharacterAnimationKey.Move;
+                _currentState = _animancer.Play(_move, 0.2f, FadeMode.FixedDuration);
             }
-
-            if (context.AirborneAction == AirborneActionId.JumpSecond)
-            {
-                PlayIfChanged(CharacterAnimationKey.JumpSecondF, _jumpSecondF, true);
-                return;
-            }
-
-            PlayIfChanged(CharacterAnimationKey.Fall, _fall, false);
+            _speedSmoothedParameter.TargetValue = _locomotionContext.HorizontalSpeed.magnitude;
         }
     }
 
-    private void PlayIfChanged(CharacterAnimationKey key, ClipTransition transition, bool notifyEnd)
+    private void PlayIfChanged(CharacterAnimationKey key, ClipTransition transition, float fadeDuration, bool notifyEnd=false)
     {
-        if (_animancer == null || transition == null)
-        {
-            return;
-        }
-
         if (_currentKey == key)
         {
             return;
@@ -140,7 +106,25 @@ public class CharacterAnimancerController : MonoBehaviour
 
         _currentKey = key;
 
-        _currentState = _animancer.Play(transition, 0.0f);
+        _currentState = _animancer.Play(transition, fadeDuration, FadeMode.FixedDuration);
+        _currentState.Time = 0.0f;
+
+        var events = _currentState.Events(this);
+        events.OnEnd = notifyEnd ? OnCurrentAnimationEnded : null;
+    }
+
+    private void PlayIfChanged(CharacterAnimationKey key, LinearMixerTransition transition, float fadeDuration, bool notifyEnd=false)
+    {
+        if (_currentKey == key)
+        {
+            return;
+        }
+
+        _currentKey = key;
+
+        Debug.Log("transition:"+transition.Name);
+
+        _currentState = _animancer.Play(transition, fadeDuration, FadeMode.FixedDuration);
         _currentState.Time = 0.0f;
 
         var events = _currentState.Events(this);
@@ -156,4 +140,26 @@ public class CharacterAnimancerController : MonoBehaviour
 
         AnimationEnded?.Invoke(_currentKey);
     }
+
+    public void Play(AnimationCommand command)
+    {
+        switch (command.Key)
+        {
+            case CharacterAnimationKey.Move:
+                PlayIfChanged(command.Key, _move, command.FadeDuration, command.NotifyEnd);
+                break;
+            case CharacterAnimationKey.DashF:
+                PlayIfChanged(command.Key, _dashF, command.FadeDuration, command.NotifyEnd);
+                break;
+            case CharacterAnimationKey.SprintImpulse:
+                PlayIfChanged(command.Key, _sprintImpulse, command.FadeDuration, command.NotifyEnd);
+                break;
+            case CharacterAnimationKey.StopRunL:
+                PlayIfChanged(command.Key, _stopRunL, command.FadeDuration, command.NotifyEnd);
+                break;
+            default:
+                break;
+        }
+    }
+
 }

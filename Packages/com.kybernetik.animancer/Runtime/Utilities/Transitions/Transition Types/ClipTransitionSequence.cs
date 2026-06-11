@@ -1,8 +1,4 @@
-// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2026 Kybernetik //
-
-#if ! UNITY_EDITOR
-#pragma warning disable CS0618 // Type or member is obsolete (for Animancer Events in Animancer Lite).
-#endif
+// Animancer // https://kybernetik.com.au/animancer // Copyright 2018-2024 Kybernetik //
 
 using System;
 using System.Collections.Generic;
@@ -10,16 +6,13 @@ using UnityEngine;
 
 namespace Animancer
 {
+    /// <inheritdoc/>
     /// <summary>A group of <see cref="ClipTransition"/>s which play one after the other.</summary>
     /// https://kybernetik.com.au/animancer/api/Animancer/ClipTransitionSequence
     /// 
     [Serializable]
-    [Obsolete("ClipTransitionSequence has been replaced by TransitionSequence" +
-        " which is much more powerful and works properly with Animancer Events." +
-        " This script still works the same as it always has so if you want to" +
-        " keep using it you can simply remove this [Obsolete] attribute." +
-        " This script will be removed in a future version of Animancer.")]
     public class ClipTransitionSequence : ClipTransition,
+        ISerializationCallbackReceiver,
         ICopyable<ClipTransitionSequence>
     {
         /************************************************************************************************************************/
@@ -45,24 +38,27 @@ namespace Animancer
         }
 
         /// <summary>The last of the <see cref="Others"/> (or <c>this</c> if there are none).</summary>
-        public ClipTransition LastTransition
-            => _Others.Length > 0
-            ? _Others[^1]
-            : this;
+        public ClipTransition LastTransition => _Others.Length > 0 ? _Others[^1] : this;
 
         /************************************************************************************************************************/
 
         private Action _OnEnd;
 
+        /// <inheritdoc/>
+        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+
+        /// <inheritdoc/>
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+            => InitializeEndEventChain();
+
         /// <summary>Initializes the End Events of each of the <see cref="Others"/> to play the next one.</summary>
         public void InitializeEndEventChain()
         {
-            if (_Others == null ||
-                _Others.Length <= 0)
+            if (_Others.Length <= 0)
                 return;
 
-            _OnEnd ??= () => AnimancerEvent.Current.State.Layer.Play(_Others[0]);
-            InitializeFirstEndEvent();
+            _OnEnd = () => AnimancerEvent.Current.State.Layer.Play(_Others[0]);
+            Events.OnEnd = _OnEnd;
 
             // Assign each of the other end events, but this first one will be set by Apply.
 
@@ -70,28 +66,11 @@ namespace Animancer
             for (int i = 1; i < _Others.Length; i++)
             {
                 var next = _Others[i];
-                previous.Events.OnEnd += () => AnimancerEvent.Current.State.Layer.Play(next);
+                previous.Events.OnEnd = () => AnimancerEvent.Current.State.Layer.Play(next);
                 previous = next;
             }
-        }
 
-        /************************************************************************************************************************/
-
-        /// <summary>
-        /// If an end event is assigned other than the one to play the next transition,
-        /// this method replaces it and move it to be the end event of the last transition instead.
-        /// </summary>
-        private void InitializeFirstEndEvent()
-        {
-            var onEnd = Events.OnEnd;
-            if (onEnd == _OnEnd ||
-                _Others == null ||
-                _Others.Length <= 0)
-                return;
-
-            Events.OnEnd = _OnEnd;
-            onEnd -= _OnEnd;
-            _Others[^1].Events.OnEnd += onEnd;
+            previous.Events.OnEnd = null;
         }
 
         /************************************************************************************************************************/
@@ -99,10 +78,18 @@ namespace Animancer
         /// <inheritdoc/>
         public override ClipState CreateState()
         {
-            if (_OnEnd == null)
-                InitializeEndEventChain();
-            else if (_Others.Length > 0)
-                InitializeFirstEndEvent();
+            // If an end event is assigned other than the one to play the next transition,
+            // replace it and move it to be the end event of the last transition instead.
+            if (_Others.Length > 0)
+            {
+                var onEnd = Events.OnEnd;
+                if (onEnd != _OnEnd)
+                {
+                    Events.OnEnd = _OnEnd;
+                    onEnd -= _OnEnd;
+                    _Others[^1].Events.OnEnd = onEnd;
+                }
+            }
 
             return base.CreateState();
         }
@@ -150,13 +137,13 @@ namespace Animancer
         /************************************************************************************************************************/
 
         /// <inheritdoc/>
-        public override float MaximumLength
+        public override float MaximumDuration
         {
             get
             {
-                var value = base.MaximumLength;
+                var value = base.MaximumDuration;
                 for (int i = 0; i < _Others.Length; i++)
-                    value += _Others[i].MaximumLength;
+                    value += _Others[i].MaximumDuration;
                 return value;
             }
         }
@@ -172,14 +159,14 @@ namespace Animancer
                 if (_Others.Length == 0)
                     return speed;
 
-                var duration = base.MaximumLength;
+                var duration = base.MaximumDuration;
                 speed *= duration;
 
                 for (int i = 0; i < _Others.Length; i++)
                 {
                     var other = _Others[i];
                     var otherSpeed = other.AverageAngularSpeed;
-                    var otherDuration = other.MaximumLength;
+                    var otherDuration = other.MaximumDuration;
                     speed += otherSpeed * otherDuration;
                     duration += otherDuration;
                 }
@@ -200,14 +187,14 @@ namespace Animancer
                 if (_Others.Length == 0)
                     return velocity;
 
-                var duration = base.MaximumLength;
+                var duration = base.MaximumDuration;
                 velocity *= duration;
 
                 for (int i = 0; i < _Others.Length; i++)
                 {
                     var other = _Others[i];
                     var otherVelocity = other.AverageVelocity;
-                    var otherDuration = other.MaximumLength;
+                    var otherDuration = other.MaximumDuration;
                     velocity += otherVelocity * otherDuration;
                     duration += otherDuration;
                 }
@@ -230,11 +217,7 @@ namespace Animancer
 
         /// <inheritdoc/>
         public override Transition<ClipState> Clone(CloneContext context)
-        {
-            var clone = new ClipTransitionSequence();
-            clone.CopyFrom(this, context);
-            return clone;
-        }
+            => new ClipTransitionSequence();
 
         /// <inheritdoc/>
         public sealed override void CopyFrom(ClipTransition copyFrom, CloneContext context)
@@ -245,7 +228,13 @@ namespace Animancer
         {
             base.CopyFrom(copyFrom, context);
 
-            context.CloneArray(copyFrom._Others, ref _Others);
+            if (copyFrom == null)
+            {
+                _Others = Array.Empty<ClipTransition>();
+                return;
+            }
+
+            AnimancerUtilities.CopyExactArray(copyFrom._Others, ref _Others);
         }
 
         /************************************************************************************************************************/
@@ -262,17 +251,25 @@ namespace Animancer
             var clip = state.Clip;
             var onEnd = state.SharedEvents?.OnEnd;
             if (Clip == clip && _OnEnd == onEnd)
+            {
                 return true;
-
-            time += Clip.length;
+            }
+            else
+            {
+                time += Clip.length;
+            }
 
             for (int i = 0; i < _Others.Length; i++)
             {
                 var other = _Others[i];
                 if (other.Clip == clip && other.Events.OnEnd == onEnd)
+                {
                     return true;
-
-                time += other.Length;
+                }
+                else
+                {
+                    time += other.Length;
+                }
             }
 
             return false;
