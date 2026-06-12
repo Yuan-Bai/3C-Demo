@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 589b346d22d381746804b43244a18565, type: 3}
+  m_Name: CharacterDefinitions
+  m_EditorClassIdentifier: 
+  _animations:
+  - AnimationId: 0
+    AnimationClip: {fileID: 4121983931797898878, guid: d2cfbe837267f2d48978d8adf6c75a18,
+      type: 3}
+    FadeDuration: 0.2
+  - AnimationId: 1
+    AnimationClip: {fileID: 5978669590653596144, guid: d2cfbe837267f2d48978d8adf6c75a18,
+      type: 3}
+    FadeDuration: 0.2
+  - AnimationId: 2
+    AnimationClip: {fileID: -1659629107847934707, guid: d2cfbe837267f2d48978d8adf6c75a18,
+      type: 3}
+    FadeDuration: 0.2
+  - AnimationId: 4
+    AnimationClip: {fileID: 8256600732189508993, guid: d2cfbe837267f2d48978d8adf6c75a18,
+      type: 3}
+    FadeDuration: 0.2
+  _actions:
+  - State: 11
+    Speed: 7
+    Duration: 2
+    Priority: 30
+    UseRootmotionXZ: 0
+    UseRootmotionY: 0
+  _moveInputDeadZone: 0.12
+  _moveSpeed: 4.5
+  _moveAcceleration: 24
+  _groundBraking: 30
+  _turnSharpness: 18
+  _moveStopDuration: 0.25
+  _dashSpeed: 7
+  _dashDuration: 0.35
+  _dashUngroundDuration: 0.1
+  _dashCommandBufferTime: 0.08
