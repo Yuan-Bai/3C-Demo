@@ -4,6 +4,10 @@ public enum AnimationId
     Move,
     DashF,
     DashB,
+    StopWalkL,
+    StopWalkR,
     StopRunL,
     StopRunR,
+    StopSprintL,
+    StopSprintR,
 }

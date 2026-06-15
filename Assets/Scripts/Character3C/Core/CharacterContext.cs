@@ -7,7 +7,8 @@ public sealed class CharacterContext
     public readonly ICharacterEventBus Bus;
     public readonly CharacterCommandBuffer Commands;
     public readonly CharacterBlackboard Bb;
-    public readonly CharacterDefinitions Defs;
+    public readonly AnimationStateDatabase Defs;
+    public readonly RootMotionAccumulator MotionAccumulator;
 
     public float FrameDeltaTime;
     public float TickDeltaTime;
@@ -18,7 +19,8 @@ public sealed class CharacterContext
         ICharacterEventBus bus,
         CharacterCommandBuffer commands,
         CharacterBlackboard bb,
-        CharacterDefinitions defs
+        AnimationStateDatabase defs,
+        RootMotionAccumulator motionAccumulator
     )
     {
         Motor = motor;
@@ -27,5 +29,6 @@ public sealed class CharacterContext
         Commands = commands;
         Bb = bb;
         Defs = defs;
+        MotionAccumulator = motionAccumulator;
     }
 }

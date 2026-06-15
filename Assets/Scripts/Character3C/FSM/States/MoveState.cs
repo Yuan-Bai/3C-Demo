@@ -1,7 +1,12 @@
+using Animancer;
 using UnityEngine;
 
 public sealed class MoveState : CharacterStateBase
 {
+    private float _speed = 2.0f;
+    private StateData _stateData;
+    private StringAsset _parameter;
+
     public MoveState(CharacterContext ctx) : base(ctx)
     {
     }
@@ -11,38 +16,64 @@ public sealed class MoveState : CharacterStateBase
 
     public override void Enter(in StateChangeRequest request)
     {
-        Ctx.Anim.Play(AnimationId.Move, 0.12f);
+        Ctx.Anim.Play(Id, AnimationId.Move, 0.12f);
+        _stateData = Ctx.Defs.GetStateData(Id);
+        _stateData.TryGetAnimationById(AnimationId.Move, out var animationEntry);
+        _parameter = animationEntry.Parameter;
     }
 
-    public override void Tick(float deltaTime)
+    public override void BeforeCharacterUpdate(float deltaTime)
     {
-        Ctx.Anim.SetFloat(Ctx.Defs.MoveSpeedParameter, Ctx.Bb.DesiredWorldMove.magnitude * Ctx.Defs.MoveSpeed);
+        base.BeforeCharacterUpdate(deltaTime);
+        TryToMoveStop();
+        TryToDash();
 
-        // 松开移动键先进入 MoveStop，而不是直接回 Idle，给停步动画/刹车留一段时间。
-        if (!HasMoveInput())
+        if (Ctx.Bb.WantsSprint)
         {
-            RequestState(CharacterStateId.MoveStop, StatePriority.Locomotion, "move input released");
+            Bb.MoveMode = MoveMode.Sprint;
+            _speed = 4.0f;
+        }
+        else
+        {
+            if (Ctx.Bb.PreferWalk)
+            {
+                Bb.MoveMode = MoveMode.Walk;
+                _speed = 0.8f;
+            }
+            else
+            {
+                Bb.MoveMode = MoveMode.Run;
+                _speed = 2.0f;
+            }
         }
     }
 
+    public override void AfterCharacterUpdate(float deltaTime)
+    {
+        base.AfterCharacterUpdate(deltaTime);
+        Ctx.Anim.SetFloat(_parameter, _speed);
+    }
+
+
+
     public override void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
     {
-        if (Ctx.Bb.DesiredWorldMove.sqrMagnitude <= 0.0001f)
+        if (Bb.LookDirection.sqrMagnitude <= 0.0001f)
         {
             return;
         }
 
-        var targetRotation = Quaternion.LookRotation(Ctx.Bb.DesiredWorldMove.normalized, Ctx.Motor.CharacterUp);
-        float t = 1.0f - Mathf.Exp(-Ctx.Defs.TurnSharpness * deltaTime);
+        var targetRotation = Quaternion.LookRotation(Bb.MoveDirection, Ctx.Motor.CharacterUp);
+        float t = 1.0f - Mathf.Exp(-18f * deltaTime);
         currentRotation = Quaternion.Slerp(currentRotation, targetRotation, t);
     }
 
     public override void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        var desiredVelocity = Ctx.Bb.DesiredWorldMove * Ctx.Defs.MoveSpeed;
+        var desiredVelocity = Ctx.Bb.MoveDirection * _speed;
         currentVelocity = Vector3.MoveTowards(
             currentVelocity,
             desiredVelocity,
-            Ctx.Defs.MoveAcceleration * deltaTime);
+            20f * deltaTime);
     }
 }

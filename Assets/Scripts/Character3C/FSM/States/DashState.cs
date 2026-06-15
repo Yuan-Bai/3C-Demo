@@ -2,9 +2,6 @@ using UnityEngine;
 
 public sealed class DashState : CharacterStateBase
 {
-    private float _dashSpeed;
-    private Vector3 _dashDirection;
-    private float _remain;
     private bool _ended;
 
     public override CharacterStateId Id => CharacterStateId.Dash;
@@ -16,38 +13,24 @@ public sealed class DashState : CharacterStateBase
 
     public override void Enter(in StateChangeRequest request)
     {
-        // Dash 是主动动作状态：进入时锁定方向和速度，结束后只发 StateEnded。
-        // 最终回 Move 还是 Idle 由 Coordinator 根据当前输入和黑板判断。
-        _dashDirection = Ctx.Bb.DesiredWorldMove.sqrMagnitude > 0.0001f
-            ? Ctx.Bb.DesiredWorldMove.normalized : Ctx.Bb.Facing;
-
-        var def = Ctx.Defs.GetAction(CharacterStateId.Dash);
-        _dashSpeed = def.Speed;
-        _remain = def.Duration;
-        _ended = false;
-
-        Ctx.Motor.ForceUnground(Ctx.Defs.DashUngroundDuration);
-
-        var handle = Ctx.Anim.Play(AnimationId.DashF);
+        var handle = Ctx.Anim.Play(Id, AnimationId.DashF);
         Ctx.Anim.BindEnd(handle, () =>
         {
             PublishEndOnce("dash anim end");
         });
-    }
-
-    public override void Tick(float deltaTime)
-    {
-        _remain -= deltaTime;
-        if (_remain <= 0.0f)
-        {
-            PublishEndOnce("dash timer end");
-        }
+        _ended = false;
     }
 
     public override void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        currentVelocity = _dashDirection * _dashSpeed;
+        Ctx.MotionAccumulator.ConsumeVelocity(Ctx.Motor.IsGrounded, Ctx.Motor.GroundNormal, deltaTime, ref currentVelocity);
     }
+
+    public override void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
+    {
+        currentRotation = Quaternion.LookRotation(Bb.MoveDirection, Ctx.Motor.CharacterUp);
+    }
+
 
     public override bool CanExit(in StateChangeRequest request)
     {
@@ -67,6 +50,6 @@ public sealed class DashState : CharacterStateBase
         }
 
         _ended = true;
-        Ctx.Bus.Publish(new CharacterStateEndedEvent(Id, AnimationId.DashF, reason));
+        RequestState(CharacterStateId.Idle, StatePriority.Locomotion, "Dash End");
     }
 }

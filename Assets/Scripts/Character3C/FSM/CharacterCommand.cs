@@ -5,6 +5,7 @@ public enum CommandChannel
 
 public enum CharacterCommandType
 {
+    Movestop,
     Jump,
     Dash,
     Attack,

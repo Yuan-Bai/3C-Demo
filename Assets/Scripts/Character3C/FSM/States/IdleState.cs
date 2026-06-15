@@ -13,24 +13,23 @@ public sealed class IdleState : CharacterStateBase
 
     public override void Enter(in StateChangeRequest request)
     {
-        Ctx.Anim.SetFloat(Ctx.Defs.MoveSpeedParameter, 0.0f);
-        Ctx.Anim.Play(AnimationId.Idle, 0.12f);
+        Ctx.Anim.Play(Id, AnimationId.Idle, 0.12f);
     }
 
-    public override void Tick(float deltaTime)
+    public override void BeforeCharacterUpdate(float deltaTime)
     {
-        // idle 自己不碰状态机；检测到移动输入后只通过 Bus 请求进入 Move。
-        if (HasMoveInput())
+        base.BeforeCharacterUpdate(deltaTime);
+        TryToDash();
+        if (Bb.HasMoveInput)
         {
-            RequestState(CharacterStateId.Move, StatePriority.Locomotion, "move input from idle");
+            RequestState(CharacterStateId.Move, StatePriority.Locomotion, "move pressed");
+            return;
         }
     }
 
+
     public override void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        currentVelocity = Vector3.MoveTowards(
-            currentVelocity,
-            Vector3.zero,
-            Ctx.Defs.GroundBraking * deltaTime);
+        currentVelocity = new(0.0f, currentVelocity.y, 0.0f);
     }
 }

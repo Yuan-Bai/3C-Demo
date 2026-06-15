@@ -40,4 +40,5 @@ MonoBehaviour:
         - 4
         _DefaultParameter: 0
         _ExtrapolateSpeed: 1
-        _ParameterName: {fileID: 0}
+        _ParameterName: {fileID: 11400000, guid: 356fd8a58d84d1748a731fa971571ce2,
+          type: 2}

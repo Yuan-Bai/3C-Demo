@@ -25,26 +25,32 @@ public sealed class KccCharacterAdapter : MonoBehaviour, ICharacterController, I
 
     public void BeforeCharacterUpdate(float deltaTime)
     {
+        // Debug.Log("BeforeCharacterUpdate");
+
         _coordinator?.BeforeCharacterUpdate(deltaTime);
     }
 
     public void PostGroundingUpdate(float deltaTime)
     {
-        _coordinator?.PostGroundingUpdate(deltaTime);
+        // Debug.Log("PostGroundingUpdate");
+        _coordinator?.CurrentState.PostGroundingUpdate(deltaTime);
     }
 
     public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
     {
-        _coordinator?.CurrentState?.UpdateRotation(ref currentRotation, deltaTime);
+        // Debug.Log("UpdateRotation");
+        _coordinator?.CurrentState.UpdateRotation(ref currentRotation, deltaTime);
     }
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        _coordinator?.CurrentState?.UpdateVelocity(ref currentVelocity, deltaTime);
+        // Debug.Log("UpdateVelocity");
+        _coordinator?.CurrentState.UpdateVelocity(ref currentVelocity, deltaTime);
     }
 
     public void AfterCharacterUpdate(float deltaTime)
     {
+        // Debug.Log("AfterCharacterUpdate");
         _coordinator?.AfterCharacterUpdate(deltaTime);
     }
     
