@@ -22,6 +22,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: 9e0989c853cd632488e66a50e8c145d2, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -42,6 +43,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: fa84973eb4d77ee4fb3c80594bc46074, type: 2}
         Parameter: {fileID: 11400000, guid: 356fd8a58d84d1748a731fa971571ce2, type: 2}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -62,6 +64,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: 0c0934155c70c5e48afe4971590a1e43, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -77,6 +80,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: 08a8274ef9452c145bf6263312b516d0, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -92,6 +96,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: a249493769b196b4291fee6af6a4fb4b, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -107,6 +112,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: 08a8274ef9452c145bf6263312b516d0, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -122,6 +128,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: 08f6de075c72b004ea0f12277439d279, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -137,6 +144,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: 08a8274ef9452c145bf6263312b516d0, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 0}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25
@@ -157,6 +165,7 @@ MonoBehaviour:
       animationEntry:
         Transition: {fileID: 11400000, guid: c594403338c3fe141b11875748214a5c, type: 2}
         Parameter: {fileID: 0}
+        EventName: {fileID: 11400000, guid: 548badb8101cc5143b1e57edb3acf19f, type: 2}
         startTime: 0
         Speed: 1
         FadeDuration: 0.25

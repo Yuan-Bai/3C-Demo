@@ -7179,6 +7179,8 @@ MonoBehaviour:
     Facing: {x: 0, y: 0, z: 1}
     JumpCount: 0
     LastFootPlant: 0
+    MoveMode: 1
+    MoveStopStartTime: 0
     LocomotionPhase01: 0
     WantsSprint: 0
     PreferWalk: 0

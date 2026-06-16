@@ -11,6 +11,7 @@ public sealed class MoveStopState : CharacterStateBase
 
     public override void Enter(in StateChangeRequest request)
     {
+        base.Enter(request);
         AnimationId animationId = AnimationId.StopRunL;
         if (Bb.LastFootPlant == FootPhase.Left)
         {

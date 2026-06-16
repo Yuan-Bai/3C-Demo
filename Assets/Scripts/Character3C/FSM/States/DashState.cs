@@ -2,10 +2,10 @@ using UnityEngine;
 
 public sealed class DashState : CharacterStateBase
 {
-    private bool _ended;
-
     public override CharacterStateId Id => CharacterStateId.Dash;
     public override StatePriority Priority => StatePriority.Dash;
+    private AnimancerStateHandle _handle;
+    private bool _canBeInterruptByAction;
 
     public DashState(CharacterContext ctx) : base(ctx)
     {
@@ -13,13 +13,52 @@ public sealed class DashState : CharacterStateBase
 
     public override void Enter(in StateChangeRequest request)
     {
-        var handle = Ctx.Anim.Play(Id, AnimationId.DashF);
-        Ctx.Anim.BindEnd(handle, () =>
+        base.Enter(request);
+        _handle = Ctx.Anim.Play(Id, AnimationId.DashF);
+        Anim.BindEnd(_handle, () =>
         {
             PublishEndOnce("dash anim end");
         });
-        _ended = false;
+
+        var stateData = Ctx.Defs.GetStateData(Id);
+        stateData.TryGetAnimationById(AnimationId.DashF, out var animationEntry);
+
+        _canBeInterruptByAction = false;
+        CanTransitionToSelf = false;
+        Anim.BindNamedEvent(animationEntry.EventName, CanBeInterruptByAction);
     }
+
+    public override void BeforeCharacterUpdate(float deltaTime)
+    {
+        base.BeforeCharacterUpdate(deltaTime);
+        // if (Anim.GetCurrentNormalizedTime() >= 0.2)
+        // {
+        //     if (Ctx.Bb.InputFrame.DashPressed)
+        //     {
+        //         _handle.Raw.Time = 0.0f;
+        //     }
+        // }
+        if (Anim.GetCurrentNormalizedTime() >= 0.5)
+        {
+            if (Bb.HasMoveInput)
+            {
+                RequestState(CharacterStateId.Move, StatePriority.Locomotion, "move pressed");
+                return;
+            }
+        }
+
+        if (Ctx.Bb.InputFrame.DashPressed)
+        {
+            Commands.Push(new CharacterCommand(
+                CharacterCommandType.Dash,
+                CommandChannel.Action,
+                (int)Priority,
+                Time.time + 0.4f,
+                ""
+            ), Time.time);
+        }
+    }
+
 
     public override void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
@@ -31,25 +70,14 @@ public sealed class DashState : CharacterStateBase
         currentRotation = Quaternion.LookRotation(Bb.MoveDirection, Ctx.Motor.CharacterUp);
     }
 
-
-    public override bool CanExit(in StateChangeRequest request)
-    {
-        return _ended || request.Priority > Priority;
-    }
-
-    public override void Exit(in StateChangeRequest request)
-    {
-        _ended = true;
-    }
-
     private void PublishEndOnce(string reason)
     {
-        if (_ended)
-        {
-            return;
-        }
-
-        _ended = true;
         RequestState(CharacterStateId.Idle, StatePriority.Locomotion, "Dash End");
+    }
+
+    private void CanBeInterruptByAction()
+    {
+        _canBeInterruptByAction = true;
+        CanTransitionToSelf = true;
     }
 }

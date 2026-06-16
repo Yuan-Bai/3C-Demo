@@ -37,6 +37,7 @@ public class AnimationEntry
     [Tooltip("Animancer资产（Clip/Mixer/Controller）")]
     public TransitionAsset Transition;
     public StringAsset Parameter;
+    public StringAsset EventName;
 
     [Header("动画参数")]
     public float startTime = 0.0f;

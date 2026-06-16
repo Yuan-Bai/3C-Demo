@@ -23,19 +23,19 @@ MonoBehaviour:
         _FadeDuration: 0.25
         _Speed: 1
         _Events:
-          _NormalizedTimes: []
-          _Callbacks: []
-          _Names: []
+          _NormalizedTimes:
+          - 0.20021759
+          - NaN
+          _Callbacks:
+          - rid: 6537719603614973957
+          _Names:
+          - {fileID: 11400000, guid: 548badb8101cc5143b1e57edb3acf19f, type: 2}
         _Clip: {fileID: -1659629107847934707, guid: d2cfbe837267f2d48978d8adf6c75a18,
           type: 3}
         _NormalizedStartTime: NaN
-        _Others:
-        - _FadeDuration: 0.25
-          _Speed: 1
-          _Events:
-            _NormalizedTimes: []
-            _Callbacks: []
-            _Names: []
-          _Clip: {fileID: -8764073977019787032, guid: d2cfbe837267f2d48978d8adf6c75a18,
-            type: 3}
-          _NormalizedStartTime: NaN
+        _Others: []
+    - rid: 6537719603614973957
+      type: {class: UnityEvent, ns: Animancer, asm: Kybernetik.Animancer}
+      data:
+        m_PersistentCalls:
+          m_Calls: []

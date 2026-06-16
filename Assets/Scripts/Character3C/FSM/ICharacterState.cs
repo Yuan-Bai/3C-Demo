@@ -6,6 +6,7 @@ public interface ICharacterState
 {
     CharacterStateId Id {get;}
     StatePriority Priority {get;}
+    bool CanTransitionToSelf {get;}
 
     bool CanEnter(in StateChangeRequest request);
     bool CanExit(in StateChangeRequest request);

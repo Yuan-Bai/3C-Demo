@@ -6,6 +6,8 @@ public abstract class CharacterStateBase : ICharacterState
 
     public abstract StatePriority Priority {get;}
 
+    public bool CanTransitionToSelf {get; protected set;} = false;
+
     protected readonly CharacterContext Ctx;
     protected readonly CharacterBlackboard Bb;
     protected readonly CharacterCommandBuffer Commands;

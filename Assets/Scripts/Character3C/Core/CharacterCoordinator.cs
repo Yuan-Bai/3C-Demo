@@ -154,15 +154,23 @@ public sealed class CharacterCoordinator : MonoBehaviour
         if (_ctx.Commands.TryConsume(CommandChannel.Action, Time.time, out var command) &&
             command.Type == CharacterCommandType.Dash)
         {
-            RequestState(CharacterStateId.Dash, StatePriority.Dash, command.Reason);
-            return;
+            if (TryChangeState(CharacterStateId.Dash, StatePriority.Dash, command.Reason))
+            {
+                return;
+            }
+            else
+            {
+                _command.Push(command, Time.time);
+                Debug.Log("push");
+                return;
+            }
         }
 
         if (_ctx.Commands.TryConsume(CommandChannel.Locomotion, Time.time, out command))
         {
             if (command.Type == CharacterCommandType.Movestop)
             {
-                RequestState(CharacterStateId.MoveStop, StatePriority.Locomotion, command.Reason);
+                TryChangeState(CharacterStateId.MoveStop, StatePriority.Locomotion, command.Reason);
                 return;
             }
         }
@@ -205,7 +213,7 @@ public sealed class CharacterCoordinator : MonoBehaviour
             priority,
             reason);
 
-        return _stateMachine.TryChange(request);
+        return _stateMachine.ForceChange(request);
     }
 
     private CharacterStateId ResolvePostActionState()

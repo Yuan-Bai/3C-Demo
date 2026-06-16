@@ -13,6 +13,7 @@ public sealed class IdleState : CharacterStateBase
 
     public override void Enter(in StateChangeRequest request)
     {
+        base.Enter(request);
         Ctx.Anim.Play(Id, AnimationId.Idle, 0.12f);
     }
 

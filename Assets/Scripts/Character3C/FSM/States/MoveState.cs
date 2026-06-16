@@ -16,6 +16,7 @@ public sealed class MoveState : CharacterStateBase
 
     public override void Enter(in StateChangeRequest request)
     {
+        base.Enter(request);
         Ctx.Anim.Play(Id, AnimationId.Move, 0.12f);
         _stateData = Ctx.Defs.GetStateData(Id);
         _stateData.TryGetAnimationById(AnimationId.Move, out var animationEntry);
