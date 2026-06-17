@@ -177,3 +177,114 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 0
+    - animationId: 3
+      animationEntry:
+        Transition: {fileID: 11400000, guid: 453415dc9e9020f4e943952028945d7a, type: 2}
+        Parameter: {fileID: 0}
+        EventName: {fileID: 11400000, guid: 548badb8101cc5143b1e57edb3acf19f, type: 2}
+        startTime: 0
+        Speed: 1
+        FadeDuration: 0.25
+        UseRootMotionXZ: 0
+        UseRootMotionY: 0
+        MixerParameterCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+  - StateId: 4
+    Priority: 0
+    CanSelfInterrupt: 0
+    RequireGround: 0
+    AnimationList:
+    - animationId: 10
+      animationEntry:
+        Transition: {fileID: 11400000, guid: 49b3c10e8f423fe4f8ac0063df2d3d38, type: 2}
+        Parameter: {fileID: 0}
+        EventName: {fileID: 0}
+        startTime: 0
+        Speed: 1
+        FadeDuration: 0.25
+        UseRootMotionXZ: 0
+        UseRootMotionY: 0
+        MixerParameterCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+    - animationId: 11
+      animationEntry:
+        Transition: {fileID: 11400000, guid: fb71687d5351b2849927f72c8cab49e8, type: 2}
+        Parameter: {fileID: 0}
+        EventName: {fileID: 0}
+        startTime: 0
+        Speed: 1
+        FadeDuration: 0.25
+        UseRootMotionXZ: 0
+        UseRootMotionY: 0
+        MixerParameterCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+  - StateId: 7
+    Priority: 0
+    CanSelfInterrupt: 0
+    RequireGround: 0
+    AnimationList:
+    - animationId: 12
+      animationEntry:
+        Transition: {fileID: 11400000, guid: 3c1aafa20abc4e2428a15987f73f90b8, type: 2}
+        Parameter: {fileID: 0}
+        EventName: {fileID: 0}
+        startTime: 0
+        Speed: 1
+        FadeDuration: 0.25
+        UseRootMotionXZ: 0
+        UseRootMotionY: 0
+        MixerParameterCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+  - StateId: 5
+    Priority: 0
+    CanSelfInterrupt: 0
+    RequireGround: 0
+    AnimationList:
+    - animationId: 13
+      animationEntry:
+        Transition: {fileID: 11400000, guid: a0f32ebe767dfa6438708917f3ab2bf5, type: 2}
+        Parameter: {fileID: 0}
+        EventName: {fileID: 0}
+        startTime: 0
+        Speed: 1
+        FadeDuration: 0.25
+        UseRootMotionXZ: 0
+        UseRootMotionY: 0
+        MixerParameterCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+    - animationId: 14
+      animationEntry:
+        Transition: {fileID: 11400000, guid: 1dbddadd16f5d844187036f43f4d0894, type: 2}
+        Parameter: {fileID: 0}
+        EventName: {fileID: 0}
+        startTime: 0
+        Speed: 1
+        FadeDuration: 0.25
+        UseRootMotionXZ: 0
+        UseRootMotionY: 0
+        MixerParameterCurve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0

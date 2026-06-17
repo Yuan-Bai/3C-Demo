@@ -4,8 +4,7 @@ public sealed class DashState : CharacterStateBase
 {
     public override CharacterStateId Id => CharacterStateId.Dash;
     public override StatePriority Priority => StatePriority.Dash;
-    private AnimancerStateHandle _handle;
-    private bool _canBeInterruptByAction;
+    // private bool _canBeInterruptByAction;
 
     public DashState(CharacterContext ctx) : base(ctx)
     {
@@ -14,8 +13,16 @@ public sealed class DashState : CharacterStateBase
     public override void Enter(in StateChangeRequest request)
     {
         base.Enter(request);
-        _handle = Ctx.Anim.Play(Id, AnimationId.DashF);
-        Anim.BindEnd(_handle, () =>
+        AnimancerStateHandle handle;
+        if (Bb.HasMoveInput)
+        {
+            handle = Ctx.Anim.Play(Id, AnimationId.DashF, 0.12f);
+        }
+        else
+        {
+            handle = Ctx.Anim.Play(Id, AnimationId.DashB, 0.12f);
+        }
+        Anim.BindEnd(handle, () =>
         {
             PublishEndOnce("dash anim end");
         });
@@ -23,7 +30,7 @@ public sealed class DashState : CharacterStateBase
         var stateData = Ctx.Defs.GetStateData(Id);
         stateData.TryGetAnimationById(AnimationId.DashF, out var animationEntry);
 
-        _canBeInterruptByAction = false;
+        // _canBeInterruptByAction = false;
         CanTransitionToSelf = false;
         Anim.BindNamedEvent(animationEntry.EventName, CanBeInterruptByAction);
     }
@@ -31,14 +38,15 @@ public sealed class DashState : CharacterStateBase
     public override void BeforeCharacterUpdate(float deltaTime)
     {
         base.BeforeCharacterUpdate(deltaTime);
-        // if (Anim.GetCurrentNormalizedTime() >= 0.2)
-        // {
-        //     if (Ctx.Bb.InputFrame.DashPressed)
-        //     {
-        //         _handle.Raw.Time = 0.0f;
-        //     }
-        // }
-        if (Anim.GetCurrentNormalizedTime() >= 0.5)
+
+        TryToJump();
+
+        if (!Ctx.Motor.IsGrounded)
+        {
+            RequestState(CharacterStateId.Fall, StatePriority.Airborne, "Not at Grounded");
+            return;
+        }
+        if (Anim.GetCurrentNormalizedTime() >= 0.55)
         {
             if (Bb.HasMoveInput)
             {
@@ -52,8 +60,8 @@ public sealed class DashState : CharacterStateBase
             Commands.Push(new CharacterCommand(
                 CharacterCommandType.Dash,
                 CommandChannel.Action,
-                (int)Priority,
-                Time.time + 0.4f,
+                Priority,
+                Time.time + 0.5f,
                 ""
             ), Time.time);
         }
@@ -67,7 +75,8 @@ public sealed class DashState : CharacterStateBase
 
     public override void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
     {
-        currentRotation = Quaternion.LookRotation(Bb.MoveDirection, Ctx.Motor.CharacterUp);
+        if (Bb.HasMoveInput)
+            currentRotation = Quaternion.LookRotation(Bb.MoveDirection, Ctx.Motor.CharacterUp);
     }
 
     private void PublishEndOnce(string reason)
@@ -77,7 +86,7 @@ public sealed class DashState : CharacterStateBase
 
     private void CanBeInterruptByAction()
     {
-        _canBeInterruptByAction = true;
+        // _canBeInterruptByAction = true;
         CanTransitionToSelf = true;
     }
 }

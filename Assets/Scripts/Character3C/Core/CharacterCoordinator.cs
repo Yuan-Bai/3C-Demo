@@ -111,6 +111,8 @@ public sealed class CharacterCoordinator : MonoBehaviour
     public void AfterCharacterUpdate(float deltaTime)
     {
         _stateMachine.CurrentState?.AfterCharacterUpdate(deltaTime);
+
+        // Debug.Log(transform.position);
     }
     #endregion
 
@@ -120,6 +122,10 @@ public sealed class CharacterCoordinator : MonoBehaviour
         _stateMachine.AddState(new MoveState(_ctx));
         _stateMachine.AddState(new MoveStopState(_ctx));
         _stateMachine.AddState(new DashState(_ctx));
+        _stateMachine.AddState(new JumpState(_ctx));
+        _stateMachine.AddState(new FallState(_ctx));
+        _stateMachine.AddState(new JumpSecondState(_ctx));
+
     }
 
     private void ReadInputIntoBlackboard()
@@ -151,26 +157,28 @@ public sealed class CharacterCoordinator : MonoBehaviour
 
     private void ConsumeBufferedCommands()
     {
-        if (_ctx.Commands.TryConsume(CommandChannel.Action, Time.time, out var command) &&
-            command.Type == CharacterCommandType.Dash)
+        if (_ctx.Commands.TryConsume(CommandChannel.Action, Time.time, out var command))
         {
-            if (TryChangeState(CharacterStateId.Dash, StatePriority.Dash, command.Reason))
+            if (TryChangeState((CharacterStateId)command.Type, command.Priority, command.Reason))
             {
                 return;
             }
             else
             {
                 _command.Push(command, Time.time);
-                Debug.Log("push");
                 return;
             }
         }
 
         if (_ctx.Commands.TryConsume(CommandChannel.Locomotion, Time.time, out command))
         {
-            if (command.Type == CharacterCommandType.Movestop)
+            if (TryChangeState((CharacterStateId)command.Type, command.Priority, command.Reason))
             {
-                TryChangeState(CharacterStateId.MoveStop, StatePriority.Locomotion, command.Reason);
+                return;
+            }
+            else
+            {
+                _command.Push(command, Time.time);
                 return;
             }
         }

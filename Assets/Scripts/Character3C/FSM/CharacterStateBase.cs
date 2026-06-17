@@ -41,11 +41,13 @@ public abstract class CharacterStateBase : ICharacterState
     public virtual void Enter(in StateChangeRequest request)
     {
         Debug.Log("进入："+Id);
+        Ctx.MotionAccumulator.ClearMove();
     }
 
     public virtual void Exit(in StateChangeRequest request)
     {
         Debug.Log("退出："+Id);
+        Ctx.MotionAccumulator.ClearMove();
     }
 
     public virtual void Tick(float deltaTime)
@@ -150,7 +152,7 @@ public abstract class CharacterStateBase : ICharacterState
             Commands.Push(new CharacterCommand(
                 CharacterCommandType.Movestop,
                 CommandChannel.Locomotion,
-                (int)Priority,
+                Priority,
                 Time.time + 0.2f,
                 ""
             ), Time.time);
@@ -169,7 +171,45 @@ public abstract class CharacterStateBase : ICharacterState
             Commands.Push(new CharacterCommand(
                 CharacterCommandType.Dash,
                 CommandChannel.Action,
-                (int)Priority,
+                Priority,
+                Time.time + 0.2f,
+                ""
+            ), Time.time);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    protected bool TryToJump()
+    {
+        if (Bb.InputFrame.JumpPressed)
+        {
+            Commands.Push(new CharacterCommand(
+                CharacterCommandType.Jump,
+                CommandChannel.Action,
+                Priority,
+                Time.time + 0.2f,
+                ""
+            ), Time.time);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    protected bool TryToJumpSecond()
+    {
+        if (Bb.InputFrame.DashPressed)
+        {
+            Commands.Push(new CharacterCommand(
+                CharacterCommandType.JumpSecond,
+                CommandChannel.Action,
+                Priority,
                 Time.time + 0.2f,
                 ""
             ), Time.time);

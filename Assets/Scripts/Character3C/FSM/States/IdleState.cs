@@ -20,10 +20,18 @@ public sealed class IdleState : CharacterStateBase
     public override void BeforeCharacterUpdate(float deltaTime)
     {
         base.BeforeCharacterUpdate(deltaTime);
+
         TryToDash();
+        TryToJump();
+        
         if (Bb.HasMoveInput)
         {
             RequestState(CharacterStateId.Move, StatePriority.Locomotion, "move pressed");
+            return;
+        }
+        if (!Ctx.Motor.IsGrounded)
+        {
+            RequestState(CharacterStateId.Fall, StatePriority.Airborne, "Not at Grounded");
             return;
         }
     }

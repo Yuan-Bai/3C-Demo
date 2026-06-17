@@ -48,7 +48,6 @@ public class HierarchicalStateMachine
     {
         if (_currentState != null && EqualityComparer<CharacterStateId>.Default.Equals(_currentState.Id, request.To))
         {
-            Debug.Log("change");
             if (!_currentState.CanTransitionToSelf)
                 return false;
         }

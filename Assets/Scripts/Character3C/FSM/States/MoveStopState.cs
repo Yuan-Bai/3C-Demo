@@ -57,6 +57,14 @@ public sealed class MoveStopState : CharacterStateBase
         base.BeforeCharacterUpdate(deltaTime);
 
         TryToDash();
+        TryToJump();
+
+        if (!Ctx.Motor.IsGrounded)
+        {
+            RequestState(CharacterStateId.Fall, StatePriority.Airborne, "Not at Grounded");
+            return;
+        }
+
         if (Bb.HasMoveInput)
         {
             RequestState(CharacterStateId.Move, StatePriority.Locomotion, "move pressed");

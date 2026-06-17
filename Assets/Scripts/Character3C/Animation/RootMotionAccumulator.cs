@@ -1,5 +1,6 @@
 
 
+using Animancer;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
@@ -8,6 +9,7 @@ public sealed class RootMotionAccumulator : MonoBehaviour
     private Animator _animator;
     private Vector3 _deltaPosition;
     private Quaternion _deltaRotation = Quaternion.identity;
+    [SerializeField] private AnimancerComponent _animancer;
 
     private void Awake()
     {
@@ -18,6 +20,9 @@ public sealed class RootMotionAccumulator : MonoBehaviour
     {
         _deltaPosition += _animator.deltaPosition;
         _deltaRotation = _animator.deltaRotation * _deltaRotation;
+
+        Debug.Log("DeltaPosition: "+ _deltaPosition);
+        Debug.Log("555: "+_animancer.States.Current?.Clip?.name ?? "无动画");
     }
 
     public void ConsumeVelocity(bool grounded, Vector3 groundNormal, float deltaTime, ref Vector3 currentVelocity)
@@ -41,6 +46,13 @@ public sealed class RootMotionAccumulator : MonoBehaviour
         if (deltaTime <= 0f) return;
 
         currentRotation = _deltaRotation * currentRotation;
+        _deltaRotation = Quaternion.identity;
+    }
+
+    public void ClearMove()
+    {
+        Debug.Log("ClearMove");
+        _deltaPosition = Vector3.zero;
         _deltaRotation = Quaternion.identity;
     }
 }

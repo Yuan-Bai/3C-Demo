@@ -28,6 +28,13 @@ public sealed class MoveState : CharacterStateBase
         base.BeforeCharacterUpdate(deltaTime);
         TryToMoveStop();
         TryToDash();
+        TryToJump();
+
+        if (!Ctx.Motor.IsGrounded)
+        {
+            RequestState(CharacterStateId.Fall, StatePriority.Airborne, "Not at Grounded");
+            return;
+        }
 
         if (Ctx.Bb.WantsSprint)
         {

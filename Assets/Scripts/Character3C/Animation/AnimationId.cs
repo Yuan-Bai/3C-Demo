@@ -10,4 +10,9 @@ public enum AnimationId
     StopRunR,
     StopSprintL,
     StopSprintR,
+    JumpL,
+    JumpR,
+    Fall,
+    JumpSecondF,
+    JumpSecondB,
 }
